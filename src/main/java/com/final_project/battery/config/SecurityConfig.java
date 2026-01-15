@@ -38,23 +38,23 @@ public class SecurityConfig {
                 .sessionManagement((session) -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
-                // 예외 처리 핸들러 등록 (이 부분이 추가됨)
+                // 예외 처리 핸들러 등록
                 .exceptionHandling((handling) -> handling
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint) // 401
                         .accessDeniedHandler(jwtAccessDeniedHandler))          // 403
 
                 // 권한 설정
                 .authorizeHttpRequests((auth) -> auth
-                                .requestMatchers("/auth/login", "/auth/reissue").permitAll()
-                                .requestMatchers(
-                                        "/v3/api-docs/**",
-                                        "/swagger-ui/**",
-                                        "/swagger-ui.html").permitAll()
+                        .requestMatchers("/auth/login", "/auth/reissue").permitAll()
+                        .requestMatchers("/auth/logout").authenticated()
 
-                                // 2. 인증된 사용자만 접근 가능 (C# 시뮬레이터, React 대시보드)
-                                // (anyRequest().authenticated()가 있어서 생략해도 되지만 명시적으로 적어둠)
-                                .requestMatchers("/api/production/**").authenticated() // 생산 실적 전송
-                                .requestMatchers("/api/inventory/**").authenticated()  // 재고 조회
+
+
+                        // 아래는 Swagger 건들 ㄴ.ㄴ
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                         "/swagger-ui/**",
+                                         "/swagger-ui.html").permitAll()
 //                         .requestMatchers("/api/~~/**").hasAuthority("ADMIN") // 관리자 예시
                         .anyRequest().authenticated()
                 )
