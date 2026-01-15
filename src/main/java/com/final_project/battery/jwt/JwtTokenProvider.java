@@ -45,8 +45,11 @@ public class JwtTokenProvider {
 
         long now = (new Date()).getTime();
 
-        // Access Token 생성
+        // Access Token 만료 시간
         Date accessTokenExpiresIn = new Date(now + ACCESS_TOKEN_EXPIRE_TIME);
+
+        // Refresh Token 만료 시간
+        long refreshTokenExpiresIn = now + REFRESH_TOKEN_EXPIRE_TIME;
         String accessToken = Jwts.builder()
                 .setSubject(authentication.getName()) // workerCode가 들어감
                 .claim(AUTHORITIES_KEY, authorities)
@@ -65,6 +68,7 @@ public class JwtTokenProvider {
                 .accessToken(accessToken)
                 .accessTokenExpiresIn(accessTokenExpiresIn.getTime())
                 .refreshToken(refreshToken)
+                .refreshTokenExpiresIn(refreshTokenExpiresIn)
                 .build();
     }
 

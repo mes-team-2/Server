@@ -1,11 +1,9 @@
 package com.final_project.battery.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -14,4 +12,7 @@ public class TokenDto {
     private String accessToken;
     private String refreshToken;
     private Long accessTokenExpiresIn;
+    private Long refreshTokenExpiresIn;
+
+    private String workerName;
 }

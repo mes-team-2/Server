@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class ProductionLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer productionLogId;
+    private Long productionLogId;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "work_order_id")
     private WorkOrder workOrder;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "lot_id")
@@ -27,6 +27,9 @@ public class ProductionLog {
     private Worker worker;
     private Integer goodQty = 0;
     private Integer badQty = 0;
+    // C# 시뮬레이터 센서 데이터
+    private Double temperature;
+    private Double voltage;
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
 }

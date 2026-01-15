@@ -45,17 +45,17 @@ public class SecurityConfig {
 
                 // 권한 설정
                 .authorizeHttpRequests((auth) -> auth
-                        .requestMatchers("/auth/login", "/auth/reissue").permitAll()
-                        .requestMatchers("/auth/logout").authenticated()
+                                .requestMatchers("/auth/login", "/auth/reissue").permitAll()
+                                .requestMatchers(
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui/**",
+                                        "/swagger-ui.html").permitAll()
 
-
-
-                        // 아래는 Swagger 건들 ㄴ.ㄴ
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                         "/swagger-ui/**",
-                                         "/swagger-ui.html").permitAll()
-//                         .requestMatchers("/api/~~/**").hasAuthority("ADMIN") // 예시
+                                // 2. 인증된 사용자만 접근 가능 (C# 시뮬레이터, React 대시보드)
+                                // (anyRequest().authenticated()가 있어서 생략해도 되지만 명시적으로 적어둠)
+                                .requestMatchers("/api/production/**").authenticated() // 생산 실적 전송
+                                .requestMatchers("/api/inventory/**").authenticated()  // 재고 조회
+//                         .requestMatchers("/api/~~/**").hasAuthority("ADMIN") // 관리자 예시
                         .anyRequest().authenticated()
                 )
 

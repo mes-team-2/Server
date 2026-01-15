@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -25,6 +27,9 @@ public class Lot {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "work_order_id", nullable = false)
     private WorkOrder workOrder;
+
+    @OneToMany(mappedBy = "lot", fetch = FetchType.LAZY)
+    private List<FgInventory> inventories = new ArrayList<>();
 
     private Integer lotQty;
     @Enumerated(EnumType.STRING)
