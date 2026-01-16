@@ -25,7 +25,9 @@ public class ProductionService {
     public void saveProductionLog(ProductionLogRequestDto dto) {
         // 1. 작업자 식별
         String workerCode = SecurityUtil.getCurrentWorkerCode();
-        Worker worker = workerRepository.findByWorkerCode(workerCode)
+        Long workerId = Long.parseLong(workerCode);
+
+        Worker worker = workerRepository.findById(workerId)
                 .orElseThrow(() -> new CustomException(ErrorCode.WORKER_NOT_FOUND));
 
         // 2. 마스터 데이터 조회

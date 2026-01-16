@@ -1,8 +1,10 @@
 package com.final_project.battery.init;
 
 import com.final_project.battery.domain.*;
+import com.final_project.battery.domain.common.LotStatus;
 import com.final_project.battery.domain.common.MachineStatus;
 import com.final_project.battery.domain.common.Role;
+import com.final_project.battery.domain.common.WorkOrderStatus;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -23,14 +26,17 @@ public class DataInitializer implements CommandLineRunner {
     private final BomRepository bomRepository;
     private final ProcessStepRepository processStepRepository;
     private final MachineRepository machineRepository;
+    private final InventoryRepository inventoryRepository;
+    private final WorkOrderRepository workOrderRepository;
+    private final LotRepository lotRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        // 중복 실행 방지 (이미 데이터가 있으면 초기화 스킵)
+        // 중복 실행 방지
         if (workerRepository.count() > 0 && productRepository.count() > 0) {
-            System.out.println(">> 초기 데이터가 이미 존재합니다. DataInitializer를 건너뜁니다.");
+            System.out.println(">> 초기 데이터가 이미 존재합니다.");
             return;
         }
 
@@ -51,11 +57,16 @@ public class DataInitializer implements CommandLineRunner {
         // 5. 공정 및 설비 생성 (5단계)
         initProcessAndMachines();
 
-        System.out.println(">> 초기 데이터 생성이 완료되었습니다!");
+        // 6. [추가] 초기 자재 재고 입고 (테스트용 10,000개씩)
+        initMaterialStock();
+
+        // 7. [추가] 테스트용 Lot 생성 (시뮬레이터 연동용)
+        initTestLot();
+
+        System.out.println(">> 초기 데이터 및 테스트 Lot 생성 완료!");
     }
 
     private void initWorkers() {
-        // 비밀번호 "1234"를 암호화하여 저장
         String encodedPassword = passwordEncoder.encode("1234");
 
         Worker operator = new Worker();
@@ -82,14 +93,12 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initMaterials() {
-        // 내부 자재
         materialRepository.save(Material.builder().materialCode("MAT-PLATE-POS").materialName("양극판 (Positive Plate)").unit("EA").build());
         materialRepository.save(Material.builder().materialCode("MAT-PLATE-NEG").materialName("음극판 (Negative Plate)").unit("EA").build());
         materialRepository.save(Material.builder().materialCode("MAT-SEPARATOR").materialName("PE 격리판").unit("EA").build());
         materialRepository.save(Material.builder().materialCode("MAT-ACID").materialName("황산 (Electrolyte)").unit("L").build());
         materialRepository.save(Material.builder().materialCode("MAT-TERM").materialName("납 단자 (Terminal)").unit("EA").build());
 
-        // 외장재 (소/중/대)
         materialRepository.save(Material.builder().materialCode("MAT-CASE-S").materialName("PP 케이스 (소)").unit("EA").build());
         materialRepository.save(Material.builder().materialCode("MAT-COVER-S").materialName("PP 커버 (소)").unit("EA").build());
         materialRepository.save(Material.builder().materialCode("MAT-CASE-M").materialName("PP 케이스 (중)").unit("EA").build());
@@ -99,7 +108,6 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initBOMs() {
-        // Helper: 코드값으로 엔티티 찾기
         Product p1 = getProduct("PROD-001");
         Product p2 = getProduct("PROD-002");
         Product p3 = getProduct("PROD-003");
@@ -133,14 +141,12 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initProcessAndMachines() {
-        // 공정 생성
         ProcessStep s1 = createStep("PROC-01", "전극 공정", 1);
         ProcessStep s2 = createStep("PROC-02", "조립 공정", 2);
         ProcessStep s3 = createStep("PROC-03", "활성화 공정", 3);
         ProcessStep s4 = createStep("PROC-04", "팩 공정", 4);
         ProcessStep s5 = createStep("PROC-05", "검사 공정", 5);
 
-        // 설비 생성
         createMachine("M-ELEC-01", "전극 코팅기 #1", s1);
         createMachine("M-ASSY-01", "조립 라인 #1", s2);
         createMachine("M-FORM-01", "활성화 장비 #1", s3);
@@ -148,15 +154,46 @@ public class DataInitializer implements CommandLineRunner {
         createMachine("M-INSP-01", "최종 검사기 #1", s5);
     }
 
+    private void initMaterialStock() {
+        materialRepository.findAll().forEach(material -> {
+            Inventory inventory = new Inventory();
+            inventory.setMaterial(material);
+            inventory.setStockQty(new BigDecimal("10000")); // 10,000개씩 입고
+            inventoryRepository.save(inventory);
+        });
+    }
+
+    private void initTestLot() {
+        // [추가됨] 테스트용 Lot 데이터 생성 로직
+        Product product = getProduct("PROD-001"); // 소형 배터리
+
+        // 1. 작업지시 생성
+        WorkOrder wo = new WorkOrder();
+        wo.setWorkOrderNo("WO-20240115-001");
+        wo.setProduct(product);
+        wo.setPlannedQty(100);
+        wo.setStatus(WorkOrderStatus.IN_PROGRESS);
+        workOrderRepository.save(wo);
+
+        // 2. LOT 생성
+        Lot lot = new Lot();
+        lot.setLotNo("LOT-20240115-001");
+        lot.setProduct(product);
+        lot.setWorkOrder(wo);
+        lot.setLotQty(100);
+        lot.setStatus(LotStatus.IN_PROGRESS);
+        lotRepository.save(lot);
+    }
+
     // --- Helper Methods ---
 
     private Product getProduct(String code) {
-        return productRepository.findByProductCode(code) // Repository에 findByProductCode 메서드 필요
+        return productRepository.findByProductCode(code)
                 .orElseThrow(() -> new RuntimeException("Product not found: " + code));
     }
 
     private void createBom(Product product, String matCode, double qty, double scrap) {
-        Material material = materialRepository.findByMaterialCode(matCode) // Repository에 findByMaterialCode 메서드 필요
+        Material material = materialRepository.findByMaterialCode(matCode)
                 .orElseThrow(() -> new RuntimeException("Material not found: " + matCode));
 
         bomRepository.save(BOM.builder()
