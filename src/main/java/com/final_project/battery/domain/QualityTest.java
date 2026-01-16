@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class QualityTest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer qualityTestId;
+    private Long qualityTestId;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "lot_id")
     private Lot lot;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "machine_id")
