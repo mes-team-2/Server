@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class MachineStatusLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer statusLogId;
+    private Long statusLogId;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "machine_id")
     private Machine machine;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "worker_id")
