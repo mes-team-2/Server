@@ -16,6 +16,8 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Optional;
 
+import static java.time.LocalDateTime.now;
+
 @Component
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
@@ -93,7 +95,7 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private void initMaterials() {
-        materialRepository.save(Material.builder().materialCode("MAT-PLATE-POS").materialName("양극판 (Positive Plate)").unit("EA").build());
+        materialRepository.save(Material.builder().materialCode("MAT-PLATE-POS").materialName("양극판 (Positive Plate)").unit("EA").createdAt(now()).build());
         materialRepository.save(Material.builder().materialCode("MAT-PLATE-NEG").materialName("음극판 (Negative Plate)").unit("EA").build());
         materialRepository.save(Material.builder().materialCode("MAT-SEPARATOR").materialName("PE 격리판").unit("EA").build());
         materialRepository.save(Material.builder().materialCode("MAT-ACID").materialName("황산 (Electrolyte)").unit("L").build());

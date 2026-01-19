@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @Builder
 public class ErrorResponse {
-    private final LocalDateTime timestamp = LocalDateTime.now();
+    private final LocalDateTime timestamp;
     private final int status;
     private final String error;
     private final String code;
@@ -19,6 +19,7 @@ public class ErrorResponse {
         return ResponseEntity
                 .status(errorCode.getStatus())
                 .body(ErrorResponse.builder()
+                        .timestamp(LocalDateTime.now())
                         .status(errorCode.getStatus().value())
                         .error(errorCode.getStatus().name())
                         .code(errorCode.name())

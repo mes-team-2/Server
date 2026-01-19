@@ -26,4 +26,9 @@ public class Material {
     private String unit;
 
     private LocalDateTime createdAt;
+
+    @PrePersist
+    private void prePersist() {
+        createdAt = LocalDateTime.now();
+    }
 }
