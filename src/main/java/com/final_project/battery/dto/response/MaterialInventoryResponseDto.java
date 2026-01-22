@@ -14,33 +14,43 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MaterialInventoryResponseDto {
-    private Long materialId;
-    private String materialCode;
-    private String materialName;
-    private BigDecimal stockQty; // 현재 재고량
-    private String unit;
+    private Long no;             // key: "no" (materialId 매핑)
+    private String materialCode; // key: "materialCode"
+    private String materialName; // key: "materialName"
+    private BigDecimal stockQty; // key: "stockQty"
+    private Integer safeQty;     // key: "safeQty" (추가됨)
+    private String unit;         // key: "unit"
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm", timezone = "Asia/Seoul")
-    private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd", timezone = "Asia/Seoul")
+    private LocalDateTime createdAt; // key: "createdAt"
 
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy/MM/dd HH:mm", timezone = "Asia/Seoul")
-    private LocalDateTime updatedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm", timezone = "Asia/Seoul")
+    private LocalDateTime inboundAt; // key: "inboundAt" (최근 입고일/수정일)
 
-    public String getInventoryStatus() {
-        // 재고 정보가 아예 없으면 DANGER
+    public String getStockStatus() {
         if (stockQty == null) return "DANGER";
 
-        // 1. SAFE (안전): 5000개 이상
-        if (stockQty.compareTo(new BigDecimal("5000")) >= 0) {
+        int safe = (safeQty != null) ? safeQty : 0;
+
+        if (stockQty.compareTo(BigDecimal.valueOf(safe)) >= 0) {
             return "SAFE";
-        }
-        // 2. WARNING (주의): 2000개 이상 ~ 5000개 미만
-        else if (stockQty.compareTo(new BigDecimal("2000")) >= 0) {
+        } else if (stockQty.compareTo(BigDecimal.ZERO) == 0) {
+            return "DANGER";
+        } else {
             return "WARNING";
         }
-        // 3. DANGER (위험): 2000개 미만
-        else {
-            return "DANGER";
-        }
+    }
+
+    public MaterialInventoryResponseDto(Long no, String materialCode, String materialName,
+                                        BigDecimal stockQty, String unit, Integer safeQty,
+                                        LocalDateTime createdAt, LocalDateTime inboundAt) {
+        this.no = no;
+        this.materialCode = materialCode;
+        this.materialName = materialName;
+        this.stockQty = (stockQty != null) ? stockQty : BigDecimal.ZERO;
+        this.unit = unit;
+        this.safeQty = (safeQty != null) ? safeQty : 1000;
+        this.createdAt = createdAt;
+        this.inboundAt = inboundAt;
     }
 }

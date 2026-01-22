@@ -13,7 +13,10 @@ public interface MaterialRepository extends JpaRepository<Material, Long> {
 
     @Query("SELECT new com.final_project.battery.dto.response.MaterialInventoryResponseDto(" +
             "m.materialId, m.materialCode, m.materialName, " +
-            "COALESCE(i.stockQty, 0), m.unit, m.createdAt, i.updatedAt) " +
-            "FROM Material m LEFT JOIN Inventory i ON i.material = m")
+            "(SELECT COALESCE(SUM(ml.remainQty), 0) FROM MaterialLot ml WHERE ml.material = m AND ml.status = 'AVAILABLE'), " +
+            "m.unit, COALESCE(m.safeQty, 1000), " +
+            "m.createdAt, " +
+            "(SELECT MAX(ml.inputDate) FROM MaterialLot ml WHERE ml.material = m)) " +
+            "FROM Material m")
     List<MaterialInventoryResponseDto> findAllWithStock();
 }

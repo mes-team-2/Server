@@ -6,9 +6,7 @@ import com.final_project.battery.dto.response.LotResponseDto;
 import com.final_project.battery.repository.LotRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,5 +32,17 @@ public class LotController {
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(dtos);
+    }
+
+    @PostMapping("/{lotId}/complete")
+    public ResponseEntity<String> completeLot(@PathVariable Long lotId) {
+        Lot lot = lotRepository.findById(lotId)
+                .orElseThrow(() -> new RuntimeException("Lot not found"));
+
+        // 상태 변경: IN_PROGRESS -> COMPLETE
+        lot.setStatus(LotStatus.COMPLETED);
+        lotRepository.save(lot);
+
+        return ResponseEntity.ok("Lot status updated to COMPLETE");
     }
 }

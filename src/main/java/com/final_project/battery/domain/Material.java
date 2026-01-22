@@ -2,6 +2,7 @@ package com.final_project.battery.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 
@@ -26,6 +27,10 @@ public class Material {
     private String unit;
 
     private LocalDateTime createdAt;
+
+    @Column(nullable = false)
+    @ColumnDefault("1000")
+    private Integer safeQty;
 
     @PrePersist
     private void prePersist() {
