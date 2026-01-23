@@ -3,6 +3,7 @@ package com.final_project.battery.service;
 import com.final_project.battery.domain.*;
 import com.final_project.battery.domain.common.MaterialLotStatus;
 import com.final_project.battery.domain.common.TxType;
+import com.final_project.battery.dto.request.MaterialInboundDto;
 import com.final_project.battery.dto.request.MaterialRegisterDto;
 import com.final_project.battery.dto.response.FgInventoryResponseDto;
 import com.final_project.battery.dto.response.MaterialInventoryResponseDto;
@@ -115,22 +116,29 @@ public class InventoryService {
         return materialRepository.findAllWithStock();
     }
 
-    // 4. [수정] 신규 자재 등록 및 자재 Lot 생성
     @Transactional
     public void registerMaterial(MaterialRegisterDto dto) {
-        // 자재 마스터 생성
-        String autoCode = "MAT-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+        // 1. 자재 코드 자동 생성 (MAT-yyyyMMdd-HHmmss)
+        String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+        String autoCode = "MAT-" + dateStr;
+
+        // 2. 자재 마스터 생성
         Material material = Material.builder()
                 .materialCode(autoCode)
                 .materialName(dto.getMaterialName())
-                .unit(dto.getUnit().toUpperCase())
+                .unit(dto.getUnit().toUpperCase()) // 대문자 통일
+                .safeQty(dto.getSafeQty() != null ? dto.getSafeQty() : 0) // null이면 0
                 .createdAt(LocalDateTime.now())
                 .build();
+
         materialRepository.save(material);
 
-        // 자재 Lot 생성 (초기 재고)
+        // 3. 기초 재고가 입력되었다면 -> 초기 Lot 및 입고 이력 생성
         if (dto.getInitialStock() != null && dto.getInitialStock().compareTo(BigDecimal.ZERO) > 0) {
-            String lotNo = "ML-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmm"));
+
+            // Lot 번호 생성 (ML-yyMMddHHmm-INIT)
+            String lotTimeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmm"));
+            String lotNo = "ML-" + lotTimeStr + "-INIT";
 
             MaterialLot materialLot = MaterialLot.builder()
                     .material(material)
@@ -138,16 +146,20 @@ public class InventoryService {
                     .inQty(dto.getInitialStock())
                     .remainQty(dto.getInitialStock())
                     .status(MaterialLotStatus.AVAILABLE)
+                    .inputDate(LocalDateTime.now())
                     .build();
+
             materialLotRepository.save(materialLot);
 
-            // 입고 이력 기록
+            // 입고 트랜잭션 기록
             MaterialTx tx = MaterialTx.builder()
                     .txType(TxType.INBOUND)
                     .material(material)
                     .materialLot(materialLot)
                     .qty(dto.getInitialStock())
+                    .txTime(LocalDateTime.now())
                     .build();
+
             materialTxRepository.save(tx);
         }
     }
@@ -162,5 +174,41 @@ public class InventoryService {
         return materialLotRepository.findByMaterialOrderByInputDateDesc(material).stream()
                 .map(MaterialLotResponseDto::from)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void inboundMaterial(MaterialInboundDto dto) {
+        // 1. 자재 조회
+        Material material = materialRepository.findById(dto.getMaterialId())
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 자재입니다."));
+
+        // 2. 새로운 LOT 번호 생성 (규칙: ML-yyMMddHHmm-RANDOM)
+        // 실제 현장에서는 바코드를 스캔하지만, 여기선 자동 생성
+        String timeStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyMMddHHmm"));
+        // 겹치지 않게 뒤에 난수나 시퀀스를 붙임 (여기선 간단히 시간 기반 + 자재ID)
+        String lotNo = "ML-" + timeStr + "-" + material.getMaterialId();
+
+        // 3. MaterialLot 생성 (재고 증가)
+        MaterialLot newLot = MaterialLot.builder()
+                .material(material)
+                .materialLotNo(lotNo)
+                .inQty(dto.getQuantity())
+                .remainQty(dto.getQuantity()) // 입고 시엔 잔량 = 입고량
+                .status(MaterialLotStatus.AVAILABLE)
+                .inputDate(LocalDateTime.now())
+                .build();
+
+        materialLotRepository.save(newLot);
+
+        // 4. 트랜잭션(Tx) 이력 기록 (입고 유형)
+        MaterialTx tx = MaterialTx.builder()
+                .txType(TxType.INBOUND)
+                .material(material)
+                .materialLot(newLot)
+                .qty(dto.getQuantity())
+                .txTime(LocalDateTime.now())
+                .build();
+
+        materialTxRepository.save(tx);
     }
 }

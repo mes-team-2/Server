@@ -1,5 +1,6 @@
 package com.final_project.battery.controller;
 
+import com.final_project.battery.dto.request.MaterialInboundDto;
 import com.final_project.battery.dto.request.MaterialRegisterDto;
 import com.final_project.battery.dto.response.FgInventoryResponseDto;
 import com.final_project.battery.dto.response.MaterialInventoryResponseDto;
@@ -40,5 +41,12 @@ public class InventoryController {
     @GetMapping("/materials/{materialId}/lots")
     public ResponseEntity<List<MaterialLotResponseDto>> getMaterialLots(@PathVariable Long materialId) {
         return ResponseEntity.ok(inventoryService.getMaterialLots(materialId));
+    }
+
+    // [추가] 자재 입고 등록 API
+    @PostMapping("/material/inbound")
+    public ResponseEntity<String> inboundMaterial(@RequestBody MaterialInboundDto dto) {
+        inventoryService.inboundMaterial(dto);
+        return ResponseEntity.ok("입고 처리가 완료되었습니다.");
     }
 }

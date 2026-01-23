@@ -37,7 +37,7 @@ public class MaterialInventoryResponseDto {
         } else if (stockQty.compareTo(BigDecimal.ZERO) == 0) {
             return "DANGER";
         } else {
-            return "WARNING";
+            return "CAUTION";
         }
     }
 
