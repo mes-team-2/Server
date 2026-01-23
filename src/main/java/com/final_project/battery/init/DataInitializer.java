@@ -58,66 +58,71 @@ public class DataInitializer implements CommandLineRunner {
         // ==========================================
         // 2. 제품 라인업 (소/중/대)
         // ==========================================
-        Product pSmall = createProduct("BAT-12V-40AH", "12V 소형 배터리 (Compact)", 40, 12, "EA");
-        Product pMedium = createProduct("BAT-12V-60AH", "12V 중형 배터리 (Standard)", 60, 12, "EA");
-        Product pLarge = createProduct("BAT-12V-80AH", "12V 대형 배터리 (Heavy)", 80, 12, "EA");
+        Product pSmall = createProduct("BAT-12V-45AH", "12V 소형 배터리 (Compact)", 45, 12, "EA");
+        Product pMedium = createProduct("BAT-12V-65AH", "12V 중형 배터리 (Standard)", 65, 12, "EA");
+        Product pLarge = createProduct("BAT-12V-90AH", "12V 대형 배터리 (Heavy)", 90, 12, "EA");
 
-        // ==========================================
-        // 3. 자재 & 초기 재고 (8대 자재 + FIFO용 멀티 Lot)
-        // ==========================================
-        // 자재 생성 (Material Master)
-        Material mPosPlate = createMaterial("양극 극판 (Positive Plate)", "EA", 10000);
-        Material mNegPlate = createMaterial("음극 극판 (Negative Plate)", "EA", 10000);
-        Material mSeparator = createMaterial("분리막 (Separator)", "M", 50000);
-        Material mElectrolyte = createMaterial("전해액 (Electrolyte)", "L", 5000);
-        Material mCase = createMaterial("배터리 케이스 (Al Case)", "EA", 1000);
-        Material mCapAssy = createMaterial("캡 어셈블리 (Cap Assy)", "EA", 1000);
-        Material mPosTab = createMaterial("양극 탭 (Positive Tab)", "EA", 5000);
-        Material mNegTab = createMaterial("음극 탭 (Negative Tab)", "EA", 5000);
+        Material mLead = createMaterial("납(Pb)", "KG", 5000);
+        Material mPosPlate = createMaterial("양극판", "EA", 10000);
+        Material mNegPlate = createMaterial("음극판", "EA", 10000);
+        Material mSeparator = createMaterial("분리판", "EA", 50000); // 요청하신 EA 단위 적용
+        Material mElectrolyte = createMaterial("전해액", "L", 5000);
+        Material mCase = createMaterial("케이스", "EA", 1000);
+        Material mCover = createMaterial("커버", "EA", 1000);
+        Material mTerminal = createMaterial("단자", "EA", 5000);
+        Material mLabel = createMaterial("라벨", "EA", 5000);
 
-        // 초기 재고 입고 (Lot 2개씩 생성: 구형 재고 -> 신규 재고)
-        // 시나리오: 저번달에 들어온 재고(A)가 먼저 소진되어야 함
-        createMaterialLots(mPosPlate, new BigDecimal("20000"), new BigDecimal("30000")); // 총 5만
+        // 4. 초기 재고 입고 (Lot 2개씩 생성: 구형 재고 -> 신규 재고)
+        // 납 (KG 단위 대량)
+        createMaterialLots(mLead, new BigDecimal("2000"), new BigDecimal("3000"));
+        // 양극/음극 (EA)
+        createMaterialLots(mPosPlate, new BigDecimal("20000"), new BigDecimal("30000"));
         createMaterialLots(mNegPlate, new BigDecimal("20000"), new BigDecimal("30000"));
+        // 분리판 (EA)
         createMaterialLots(mSeparator, new BigDecimal("40000"), new BigDecimal("60000"));
-        createMaterialLots(mElectrolyte, new BigDecimal("8000"), new BigDecimal("12000"));
+        // 전해액 (L)
+        createMaterialLots(mElectrolyte, new BigDecimal("2000"), new BigDecimal("3000"));
+        // 부자재들 (EA)
         createMaterialLots(mCase, new BigDecimal("2000"), new BigDecimal("3000"));
-        createMaterialLots(mCapAssy, new BigDecimal("2000"), new BigDecimal("3000"));
-        createMaterialLots(mPosTab, new BigDecimal("20000"), new BigDecimal("30000"));
-        createMaterialLots(mNegTab, new BigDecimal("20000"), new BigDecimal("30000"));
+        createMaterialLots(mCover, new BigDecimal("2000"), new BigDecimal("3000"));
+        createMaterialLots(mTerminal, new BigDecimal("4000"), new BigDecimal("6000")); // 단자는 2개씩 쓰니까 좀 더 많이
+        createMaterialLots(mLabel, new BigDecimal("2000"), new BigDecimal("3000"));
 
-        // ==========================================
-        // 4. BOM (Bill of Materials) - 리얼 레시피
-        // ==========================================
-        // [소형 40Ah]
-        createBom(pSmall, mPosPlate, 10, 0.01);
-        createBom(pSmall, mNegPlate, 11, 0.01);
-        createBom(pSmall, mSeparator, 22, 0.01);
-        createBom(pSmall, mElectrolyte, 0.5, 0.02);
+
+        // 5. BOM 생성 (이미지 테이블 수치 반영)
+
+        // [소형 45Ah]
+        createBom(pSmall, mLead, 6.5, 0.0);
+        createBom(pSmall, mPosPlate, 5, 0.01);
+        createBom(pSmall, mNegPlate, 5, 0.01);
+        createBom(pSmall, mSeparator, 10, 0.01);
+        createBom(pSmall, mElectrolyte, 2.4, 0.02);
         createBom(pSmall, mCase, 1, 0.0);
-        createBom(pSmall, mCapAssy, 1, 0.0);
-        createBom(pSmall, mPosTab, 1, 0.0);
-        createBom(pSmall, mNegTab, 1, 0.0);
+        createBom(pSmall, mCover, 1, 0.0);
+        createBom(pSmall, mTerminal, 2, 0.0);
+        createBom(pSmall, mLabel, 1, 0.0);
 
-        // [중형 60Ah] - 표준
-        createBom(pMedium, mPosPlate, 15, 0.01);
-        createBom(pMedium, mNegPlate, 16, 0.01);
-        createBom(pMedium, mSeparator, 32, 0.01);
-        createBom(pMedium, mElectrolyte, 0.8, 0.02);
+        // [중형 65Ah]
+        createBom(pMedium, mLead, 8.5, 0.0);
+        createBom(pMedium, mPosPlate, 6, 0.01);
+        createBom(pMedium, mNegPlate, 6, 0.01);
+        createBom(pMedium, mSeparator, 12, 0.01);
+        createBom(pMedium, mElectrolyte, 3.2, 0.02);
         createBom(pMedium, mCase, 1, 0.0);
-        createBom(pMedium, mCapAssy, 1, 0.0);
-        createBom(pMedium, mPosTab, 1, 0.0);
-        createBom(pMedium, mNegTab, 1, 0.0);
+        createBom(pMedium, mCover, 1, 0.0);
+        createBom(pMedium, mTerminal, 2, 0.0);
+        createBom(pMedium, mLabel, 1, 0.0);
 
-        // [대형 80Ah]
-        createBom(pLarge, mPosPlate, 20, 0.01);
-        createBom(pLarge, mNegPlate, 21, 0.01);
-        createBom(pLarge, mSeparator, 42, 0.01);
-        createBom(pLarge, mElectrolyte, 1.2, 0.02);
+        // [대형 90Ah]
+        createBom(pLarge, mLead, 11.5, 0.0);
+        createBom(pLarge, mPosPlate, 8, 0.01);
+        createBom(pLarge, mNegPlate, 8, 0.01);
+        createBom(pLarge, mSeparator, 16, 0.01);
+        createBom(pLarge, mElectrolyte, 4.5, 0.02);
         createBom(pLarge, mCase, 1, 0.0);
-        createBom(pLarge, mCapAssy, 1, 0.0);
-        createBom(pLarge, mPosTab, 1, 0.0);
-        createBom(pLarge, mNegTab, 1, 0.0);
+        createBom(pLarge, mCover, 1, 0.0);
+        createBom(pLarge, mTerminal, 2, 0.0);
+        createBom(pLarge, mLabel, 1, 0.0);
 
         // ==========================================
         // 5. 공정 및 설비 (A라인 / B라인 구축)`
