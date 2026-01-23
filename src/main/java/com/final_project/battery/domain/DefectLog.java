@@ -26,4 +26,7 @@ public class DefectLog {
     private String defectType;
     private Integer defectQty = 1;
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    private Double temperature;
+    private Double voltage;
 }

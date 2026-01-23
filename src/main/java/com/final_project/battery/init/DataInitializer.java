@@ -120,13 +120,13 @@ public class DataInitializer implements CommandLineRunner {
         createBom(pLarge, mNegTab, 1, 0.0);
 
         // ==========================================
-        // 5. 공정 및 설비 (A라인 / B라인 구축)
+        // 5. 공정 및 설비 (A라인 / B라인 구축)`
         // ==========================================
-        ProcessStep s1 = createStep("PROC-01", "극판 조립 (Stacking)", 1);
-        ProcessStep s2 = createStep("PROC-02", "셀 조립 (Packaging)", 2);
-        ProcessStep s3 = createStep("PROC-03", "전해액 주입 (Injection)", 3);
-        ProcessStep s4 = createStep("PROC-04", "충전/활성화 (Formation)", 4);
-        ProcessStep s5 = createStep("PROC-05", "최종 검사 (Inspection)", 5);
+        ProcessStep s1 = createStep("PROC-10", "전극공정(Electrode)", 10);
+        ProcessStep s2 = createStep("PROC-20", "조립공정(Assembly)", 20);
+        ProcessStep s3 = createStep("PROC-30", "활성화공정(Formation)", 30);
+        ProcessStep s4 = createStep("PROC-40", "팩 (Pack)", 40);
+        ProcessStep s5 = createStep("PROC-50", "최종 검사 (Inspection)", 50);
 
         // Line A (메인 라인)
         createMachine("MAC-A-01", "Stacking #A", s1, true);
