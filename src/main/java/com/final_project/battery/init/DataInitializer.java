@@ -92,33 +92,33 @@ public class DataInitializer implements CommandLineRunner {
         // 5. BOM 생성 (이미지 테이블 수치 반영)
 
         // [소형 45Ah]
-        createBom(pSmall, mLead, 6.5, 0.0);
+        createBom(pSmall, mLead, 6.0, 0.0);
         createBom(pSmall, mPosPlate, 5, 0.01);
         createBom(pSmall, mNegPlate, 5, 0.01);
         createBom(pSmall, mSeparator, 10, 0.01);
-        createBom(pSmall, mElectrolyte, 2.4, 0.02);
+        createBom(pSmall, mElectrolyte, 2.0, 0.02);
         createBom(pSmall, mCase, 1, 0.0);
         createBom(pSmall, mCover, 1, 0.0);
         createBom(pSmall, mTerminal, 2, 0.0);
         createBom(pSmall, mLabel, 1, 0.0);
 
         // [중형 65Ah]
-        createBom(pMedium, mLead, 8.5, 0.0);
+        createBom(pMedium, mLead, 9.0, 0.0);
         createBom(pMedium, mPosPlate, 6, 0.01);
         createBom(pMedium, mNegPlate, 6, 0.01);
         createBom(pMedium, mSeparator, 12, 0.01);
-        createBom(pMedium, mElectrolyte, 3.2, 0.02);
+        createBom(pMedium, mElectrolyte, 3.0, 0.02);
         createBom(pMedium, mCase, 1, 0.0);
         createBom(pMedium, mCover, 1, 0.0);
         createBom(pMedium, mTerminal, 2, 0.0);
         createBom(pMedium, mLabel, 1, 0.0);
 
         // [대형 90Ah]
-        createBom(pLarge, mLead, 11.5, 0.0);
+        createBom(pLarge, mLead, 12, 0.0);
         createBom(pLarge, mPosPlate, 8, 0.01);
         createBom(pLarge, mNegPlate, 8, 0.01);
         createBom(pLarge, mSeparator, 16, 0.01);
-        createBom(pLarge, mElectrolyte, 4.5, 0.02);
+        createBom(pLarge, mElectrolyte, 4.0, 0.02);
         createBom(pLarge, mCase, 1, 0.0);
         createBom(pLarge, mCover, 1, 0.0);
         createBom(pLarge, mTerminal, 2, 0.0);
@@ -134,18 +134,18 @@ public class DataInitializer implements CommandLineRunner {
         ProcessStep s5 = createStep("PROC-50", "최종 검사 (Inspection)", 50);
 
         // Line A (메인 라인)
-        createMachine("MAC-A-01", "Stacking #A", s1, true);
-        createMachine("MAC-A-02", "Packaging #A", s2, true);
-        createMachine("MAC-A-03", "Injector #A", s3, true);
-        createMachine("MAC-A-04", "Cycler #A", s4, true);
-        createMachine("MAC-A-05", "Inspector #A", s5, true);
+        createMachine("MAC-A-01", "Electrode M/C #1", s1, true); // 납, 극판 투입
+        createMachine("MAC-A-02", "Assembly Line #1", s2, true); // 분리판, 케이스, 전해액 등 투입
+        createMachine("MAC-A-03", "Formation Sys #1", s3, true); // (자재 없음 or 추가 전해액)
+        createMachine("MAC-A-04", "Pack Line #1", s4, true);     // 라벨 투입
+        createMachine("MAC-A-05", "Inspector #1", s5, true);     // (자재 없음)
 
-        // Line B (서브 라인 - 일부 가동 중지 상태 시뮬레이션)
-        createMachine("MAC-B-01", "Stacking #B", s1, true);
-        createMachine("MAC-B-02", "Packaging #B", s2, false); // 고장/대기 상황
-        createMachine("MAC-B-03", "Injector #B", s3, true);
-        createMachine("MAC-B-04", "Cycler #B", s4, true);
-        createMachine("MAC-B-05", "Inspector #B", s5, true);
+//        // Line B (서브 라인 - 일부 가동 중지 상태 시뮬레이션)
+//        createMachine("MAC-B-01", "Stacking #B", s1, true);
+//        createMachine("MAC-B-02", "Packaging #B", s2, false); // 고장/대기 상황
+//        createMachine("MAC-B-03", "Injector #B", s3, true);
+//        createMachine("MAC-B-04", "Cycler #B", s4, true);
+//        createMachine("MAC-B-05", "Inspector #B", s5, true);
 
         // ==========================================
         // 6. 생산 이력 시뮬레이션 (과거/현재/미래)
