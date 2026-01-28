@@ -45,6 +45,11 @@ public class MaterialLot {
     @Builder.Default
     private MaterialLotStatus status = MaterialLotStatus.AVAILABLE;
 
+    // 현재 이 자재가 장착된 설비 (null이면 창고 보관 중)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "current_machine_id")
+    private Machine currentMachine;
+
     @PrePersist
     public void prePersist() {
         if (this.inputDate == null) this.inputDate = LocalDateTime.now();

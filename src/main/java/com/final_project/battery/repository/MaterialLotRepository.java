@@ -1,5 +1,6 @@
 package com.final_project.battery.repository;
 
+import com.final_project.battery.domain.Machine;
 import com.final_project.battery.domain.Material;
 import com.final_project.battery.domain.MaterialLot;
 import com.final_project.battery.domain.common.MaterialLotStatus;
@@ -18,4 +19,6 @@ public interface MaterialLotRepository extends JpaRepository<MaterialLot, Long> 
     List<MaterialLot> findAvailableLotsByMaterial(@Param("material") Material material);
 
     List<MaterialLot> findByMaterialOrderByInputDateDesc(Material material);
+
+    List<MaterialLot> findByCurrentMachineAndStatus(Machine currentMachine, MaterialLotStatus status);
 }

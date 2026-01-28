@@ -2,8 +2,7 @@ package com.final_project.battery.domain;
 
 import com.final_project.battery.domain.common.LotStatus;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -12,6 +11,9 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Lot {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,7 +31,7 @@ public class Lot {
     private WorkOrder workOrder;
 
     @OneToMany(mappedBy = "lot", fetch = FetchType.LAZY)
-    private List<FgInventory> inventories = new ArrayList<>();
+    private List<FgInventory> inventories;
 
     private Integer lotQty;
     @Enumerated(EnumType.STRING)

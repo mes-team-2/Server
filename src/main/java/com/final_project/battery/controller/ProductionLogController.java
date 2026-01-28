@@ -16,9 +16,9 @@ public class ProductionLogController {
     private final ProductionService productionService;
 
     // C#
-    @PostMapping("/log")
-    public ResponseEntity<String> saveLog(@RequestBody ProductionLogRequestDto requestDto) {
-        productionService.saveProductionLog(requestDto);
-        return ResponseEntity.ok("생산 실적 수집 완료");
-    }
+//    @PostMapping("/log")
+//    public ResponseEntity<String> saveLog(@RequestBody ProductionLogRequestDto requestDto) {
+//        productionService.saveProductionLog(requestDto);
+//        return ResponseEntity.ok("생산 실적 수집 완료");
+//    }
 }

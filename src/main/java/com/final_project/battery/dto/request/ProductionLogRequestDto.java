@@ -4,17 +4,28 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
 public class ProductionLogRequestDto {
-    private Long machineId;      // 설비 ID
-    private Long lotId;          // Lot ID
-    private Long processStepId;  // 공정 ID (1~5)
+    private String machineCode;     // 설비 코드
+    private String timestamp;       // 생산 시간
 
-    private Integer goodQty;     // 양품 수량
-    private Integer badQty;      // 불량 수량
+    private Integer qty;            // 생산 수량 (보통 1)
+    private Boolean isBad;          // 불량 여부
 
-    private Double temperature;  // 온도
-    private Double voltage;      // 전압
+    private String defectType;      // 불량 유형
+
+    // 환경 데이터 스냅샷
+    private Double temperature;
+    private Double humidity;
+    private Double voltage;
+
+    // 작업자 정보
+    private String workerCode;
+
+    // 설비가 사용했다고 신고한 자재 Lot ID 목록
+    private List<Long> materialLotIds;
 }

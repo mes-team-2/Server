@@ -30,6 +30,12 @@ public class ProductionLog {
     // C# 시뮬레이터 센서 데이터
     private Double temperature;
     private Double voltage;
+    private Double humidity;
+
+    // 사용한 자재 정보 스냅샷
+    @Column(columnDefinition = "TEXT")
+    private String usedMaterialInfo;
+
     private LocalDateTime startedAt;
     private LocalDateTime endedAt;
 }

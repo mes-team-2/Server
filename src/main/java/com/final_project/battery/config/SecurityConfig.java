@@ -46,7 +46,9 @@ public class SecurityConfig {
                 // 권한 설정
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/auth/login", "/auth/reissue").permitAll()
+                                .requestMatchers("/api/machines/**").permitAll()
                         .requestMatchers("/auth/logout").authenticated()
+                                .requestMatchers("/api/log/**").permitAll()
 
 
 

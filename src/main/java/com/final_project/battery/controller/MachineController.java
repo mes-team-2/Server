@@ -1,58 +1,51 @@
 package com.final_project.battery.controller;
 
-import com.final_project.battery.domain.Machine;
-import com.final_project.battery.domain.MachineStatusLog;
-import com.final_project.battery.domain.Worker;
-import com.final_project.battery.domain.common.MachineStatus;
-import com.final_project.battery.repository.MachineRepository;
-import com.final_project.battery.repository.MachineStatusLogRepository;
-import com.final_project.battery.repository.WorkerRepository;
-import com.final_project.battery.util.SecurityUtil;
+import com.final_project.battery.domain.common.WorkOrderStatus;
+import com.final_project.battery.dto.response.MachineMaterialDto;
+import com.final_project.battery.repository.WorkOrderRepository;
+import com.final_project.battery.service.MachineService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @RestController
-@RequestMapping("/api/machine")
+@RequestMapping("/api/machines")
 @RequiredArgsConstructor
 public class MachineController {
+    private final MachineService machineService;
+    private final WorkOrderRepository workOrderRepository;
 
-    private final MachineRepository machineRepository;
-    private final MachineStatusLogRepository machineStatusLogRepository;
-    private final WorkerRepository workerRepository;
+    @GetMapping("/{machineCode}/workorder")
+    public ResponseEntity<Map<String, Object>> getCurrentWorkOrder(@PathVariable String machineCode) {
+        return workOrderRepository.findFirstByStatusOrderByStartedAtDesc(WorkOrderStatus.IN_PROGRESS)
+                .map(wo -> {
+                    Map<String, Object> response = new HashMap<>();
+                    response.put("workOrderNo", wo.getWorkOrderNo());
+                    response.put("productName", wo.getProduct().getProductName());
+                    response.put("plannedQty", wo.getPlannedQty());
+                    response.put("producedQty", 0);
+                    return ResponseEntity.ok(response);
+                })
+                // [수정] 에러 시에도 Map을 반환하여 타입 불일치 해결
+                .orElse(ResponseEntity.status(HttpStatus.NO_CONTENT)
+                        .body(Collections.singletonMap("message", "진행 중인 작업지시 없음")));
+    }
 
-    // 설비 상태 변경 API (RUN, STOP, ERROR)
-    @PostMapping("/{machineId}/status")
-    @Transactional
-    public ResponseEntity<String> updateMachineStatus(
-            @PathVariable Long machineId,
-            @RequestParam MachineStatus status,
-            @RequestParam(required = false) String reason
-            ) {
-        Long workerId = Long.parseLong(SecurityUtil.getCurrentWorkerCode());
+    @GetMapping("/{machineCode}/material-lots")
+    public ResponseEntity<List<MachineMaterialDto>> getMountedMaterials(@PathVariable String machineCode) {
+        return ResponseEntity.ok(machineService.getMountedMaterials(machineCode));
+    }
 
-        Worker worker = workerRepository.findById(workerId)
-                .orElseThrow(() -> new RuntimeException("작업자 정보가 유효하지 않습니다."));
-
-        Machine machine = machineRepository.findById(machineId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 설비입니다."));
-
-        // 상태 변경
-        machine.setStatus(status);
-
-        // 이력 로그 저장 (MachineStatusLog)
-        MachineStatusLog log = new MachineStatusLog();
-        log.setMachine(machine);
-        log.setWorker(worker);
-        log.setStatus(status.name());
-        log.setReasonCode(reason);
-        log.setStartTime(LocalDateTime.now());
-
-        machineStatusLogRepository.save(log);
-
-        return ResponseEntity.ok("설비 상태 변경 완료: " + status);
+    @PostMapping("/{machineCode}/workorder/complete")
+    public ResponseEntity<?> completeWorkOrder(@PathVariable String machineCode, @RequestBody Map<String, String> body) {
+        String workOrderNo = body.get("workOrderNo");
+        machineService.completeWorkOrder(workOrderNo);
+        return ResponseEntity.ok("작업지시(" + workOrderNo + ") 상태가 DONE으로 변경되었습니다.");
     }
 }

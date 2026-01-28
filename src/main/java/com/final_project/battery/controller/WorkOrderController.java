@@ -24,10 +24,10 @@ public class WorkOrderController {
         return ResponseEntity.ok("작업 지시 생성 완료 (작업번호: " + woNo + ")");
     }
 
-    // LOT 발행 API
-    @PostMapping("/lot/create")
-    public ResponseEntity<String> createLot(@RequestBody LotCreateDto dto) {
-        String lotNo = workOrderService.createLot(dto);
-        return ResponseEntity.ok("LOT 발행 완료 (LOT번호: " + lotNo + ")");
-    }
+//    // LOT 발행 API
+//    @PostMapping("/lot/create")
+//    public ResponseEntity<String> createLot(@RequestBody LotCreateDto dto) {
+//        String lotNo = workOrderService.createLot(dto);
+//        return ResponseEntity.ok("LOT 발행 완료 (LOT번호: " + lotNo + ")");
+//    }
 }

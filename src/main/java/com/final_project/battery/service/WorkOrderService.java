@@ -47,31 +47,31 @@ public class WorkOrderService {
         return woNo;
     }
 
-    // LOT 발행
-    @Transactional
-    public String createLot(LotCreateDto dto) {
-        // 작업지시 조회
-        WorkOrder workOrder = workOrderRepository.findByWorkOrderNo(dto.getWorkOrderNo())
-                .orElseThrow(() -> new RuntimeException("작업 지시를 찾을 수 없습니다: " + dto.getWorkOrderNo()));
-        // Lot 번호 생성 (LOT-날짜-시간)
-        String lotNo = "LOT-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
-
-        Lot lot = new Lot();
-        lot.setLotNo(lotNo);
-        lot.setWorkOrder(workOrder);
-        lot.setProduct(workOrder.getProduct());
-        lot.setLotQty(dto.getLotQty());
-        lot.setStatus(LotStatus.IN_PROGRESS);
-        lot.setCreatedAt(LocalDateTime.now());
-
-        lotRepository.save(lot);
-
-        // 지시 상태 변경 (대기 -> 진행중)
-        if (workOrder.getStatus() == WorkOrderStatus.WAIT) {
-            workOrder.setStatus(WorkOrderStatus.IN_PROGRESS);
-            workOrder.setStartedAt(LocalDateTime.now());
-        }
-
-        return lotNo;
-    }
+//    // LOT 발행
+//    @Transactional
+//    public String createLot(LotCreateDto dto) {
+//        // 작업지시 조회
+//        WorkOrder workOrder = workOrderRepository.findByWorkOrderNo(dto.getWorkOrderNo())
+//                .orElseThrow(() -> new RuntimeException("작업 지시를 찾을 수 없습니다: " + dto.getWorkOrderNo()));
+//        // Lot 번호 생성 (LOT-날짜-시간)
+//        String lotNo = "LOT-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+//
+//        Lot lot = new Lot();
+//        lot.setLotNo(lotNo);
+//        lot.setWorkOrder(workOrder);
+//        lot.setProduct(workOrder.getProduct());
+//        lot.setLotQty(dto.getLotQty());
+//        lot.setStatus(LotStatus.IN_PROGRESS);
+//        lot.setCreatedAt(LocalDateTime.now());
+//
+//        lotRepository.save(lot);
+//
+//        // 지시 상태 변경 (대기 -> 진행중)
+//        if (workOrder.getStatus() == WorkOrderStatus.WAIT) {
+//            workOrder.setStatus(WorkOrderStatus.IN_PROGRESS);
+//            workOrder.setStartedAt(LocalDateTime.now());
+//        }
+//
+//        return lotNo;
+//    }
 }

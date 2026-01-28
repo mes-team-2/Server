@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class InventoryService {
     private final FgInventoryRepository fgInventoryRepository;
-    private final InventoryRepository inventoryRepository;
     private final MaterialTxRepository materialTxRepository;
     private final BomRepository bomRepository;
     private final MaterialRepository materialRepository;

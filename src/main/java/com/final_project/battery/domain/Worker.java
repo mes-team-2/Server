@@ -20,6 +20,6 @@ public class Worker {
     private String workerName;
     @Enumerated(EnumType.STRING)
     private Role role;
-    private Boolean isActive = true;
+    private Boolean isActive;
     private LocalDateTime createdAt;
 }

@@ -1,5 +1,6 @@
 package com.final_project.battery.domain;
 
+import com.final_project.battery.domain.common.DefectType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,10 +24,12 @@ public class DefectLog {
     private Machine machine;
     @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "worker_id")
     private Worker worker;
-    private String defectType;
+    @Enumerated(EnumType.STRING)
+    private DefectType defectType;
     private Integer defectQty = 1;
     private LocalDateTime createdAt = LocalDateTime.now();
 
     private Double temperature;
     private Double voltage;
+    private Double humidity;
 }

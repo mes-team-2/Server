@@ -12,8 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Random;
 
 import static java.time.LocalDateTime.now;
 
@@ -32,14 +31,19 @@ public class DataInitializer implements CommandLineRunner {
     private final WorkOrderRepository workOrderRepository;
     private final LotRepository lotRepository;
     private final PasswordEncoder passwordEncoder;
-    private final FgInventoryRepository fgInventoryRepository; // 완제품 재고용
+    private final FgInventoryRepository fgInventoryRepository;
+    private final SensorLogRepository sensorLogRepository;
 
-    // 시퀀스 관리
+    // [추가] 설비 상태 및 품질 검사 초기화를 위한 리포지토리
+    private final MachineStatusLogRepository machineStatusLogRepository;
+    private final QualityTestRepository qualityTestRepository;
+
     private int matSeq = 1;
 
     @Override
     @Transactional
     public void run(String... args) throws Exception {
+        // 중복 초기화 방지
         if (workerRepository.count() > 0) {
             System.out.println("⚠️ 데이터가 이미 존재하여 초기화를 건너뜁니다.");
             return;
@@ -47,125 +51,166 @@ public class DataInitializer implements CommandLineRunner {
 
         System.out.println("🏭 [Real Factory Mode] 공장 초기 데이터를 생성합니다...");
 
-        // ==========================================
-        // 1. 작업자 생성 (조직도 반영)
-        // ==========================================
-        createWorker("OP-001", "김반장", "1234", Role.OPERATOR); // 현장 반장
-        createWorker("OP-002", "이작업", "1234", Role.OPERATOR); // 라인 작업자
-        createWorker("QC-001", "박품질", "1234", Role.OPERATOR); // 품질 검사원
-        createWorker("MGR-01", "최관리", "1234", Role.ADMIN);    // 생산 관리자
+        // 1. 작업자 생성
+        createWorker("OP-001", "김반장", "1234", Role.OPERATOR);
+        createWorker("OP-002", "이작업", "1234", Role.OPERATOR);
+        createWorker("QC-001", "박품질", "1234", Role.OPERATOR);
+        createWorker("MGR-01", "최관리", "1234", Role.ADMIN);
+        createWorker("SYSTEM", "시스템", "1234", Role.ADMIN);
 
-        // ==========================================
-        // 2. 제품 라인업 (소/중/대)
-        // ==========================================
+        // 2. 공정 및 설비 생성
+        ProcessStep s1 = createStep("PROC-10", "전극공정(Electrode)", 10);
+        ProcessStep s2 = createStep("PROC-20", "조립공정(Assembly)", 20);
+        ProcessStep s3 = createStep("PROC-30", "활성화공정(Formation)", 30);
+        ProcessStep s4 = createStep("PROC-40", "팩공정(Pack)", 40);
+        ProcessStep s5 = createStep("PROC-50", "검사공정(Inspection)", 50);
+
+        Machine mA01 = createMachine("MAC-A-01", "Electrode M/C #1", s1, true);
+        Machine mA02 = createMachine("MAC-A-02", "Assembly Line #1", s2, true);
+        Machine mA03 = createMachine("MAC-A-03", "Formation Sys #1", s3, true);
+        Machine mA04 = createMachine("MAC-A-04", "Pack Line #1", s4, true);
+        Machine mA05 = createMachine("MAC-A-05", "Inspector #1", s5, true);
+
+        // 3. 제품 라인업
         Product pSmall = createProduct("BAT-12V-45AH", "12V 소형 배터리 (Compact)", 45, 12, "EA");
         Product pMedium = createProduct("BAT-12V-65AH", "12V 중형 배터리 (Standard)", 65, 12, "EA");
         Product pLarge = createProduct("BAT-12V-90AH", "12V 대형 배터리 (Heavy)", 90, 12, "EA");
 
+        // 4. 자재 생성
         Material mLead = createMaterial("납(Pb)", "KG", 5000);
         Material mPosPlate = createMaterial("양극판", "EA", 10000);
         Material mNegPlate = createMaterial("음극판", "EA", 10000);
-        Material mSeparator = createMaterial("분리판", "EA", 50000); // 요청하신 EA 단위 적용
+        Material mSeparator = createMaterial("분리판", "EA", 50000);
         Material mElectrolyte = createMaterial("전해액", "L", 5000);
         Material mCase = createMaterial("케이스", "EA", 1000);
         Material mCover = createMaterial("커버", "EA", 1000);
         Material mTerminal = createMaterial("단자", "EA", 5000);
         Material mLabel = createMaterial("라벨", "EA", 5000);
 
-        // 4. 초기 재고 입고 (Lot 2개씩 생성: 구형 재고 -> 신규 재고)
-        // 납 (KG 단위 대량)
-        createMaterialLots(mLead, new BigDecimal("2000"), new BigDecimal("3000"));
-        // 양극/음극 (EA)
-        createMaterialLots(mPosPlate, new BigDecimal("20000"), new BigDecimal("30000"));
-        createMaterialLots(mNegPlate, new BigDecimal("20000"), new BigDecimal("30000"));
-        // 분리판 (EA)
-        createMaterialLots(mSeparator, new BigDecimal("40000"), new BigDecimal("60000"));
-        // 전해액 (L)
-        createMaterialLots(mElectrolyte, new BigDecimal("2000"), new BigDecimal("3000"));
-        // 부자재들 (EA)
-        createMaterialLots(mCase, new BigDecimal("2000"), new BigDecimal("3000"));
-        createMaterialLots(mCover, new BigDecimal("2000"), new BigDecimal("3000"));
-        createMaterialLots(mTerminal, new BigDecimal("4000"), new BigDecimal("6000")); // 단자는 2개씩 쓰니까 좀 더 많이
-        createMaterialLots(mLabel, new BigDecimal("2000"), new BigDecimal("3000"));
+        // 5. 자재 LOT 생성 및 설비 장착
+        createMountedLot(mLead, new BigDecimal("2700"), mA01);
+        createMountedLot(mPosPlate, new BigDecimal("1900"), mA01);
+        createMountedLot(mNegPlate, new BigDecimal("1900"), mA01);
 
+        createMountedLot(mSeparator, new BigDecimal("3800"), mA02);
+        createMountedLot(mElectrolyte, new BigDecimal("900"), mA02);
+        createMountedLot(mCase, new BigDecimal("300"), mA02);
+        createMountedLot(mCover, new BigDecimal("300"), mA02);
+        createMountedLot(mTerminal, new BigDecimal("600"), mA02);
 
-        // 5. BOM 생성 (이미지 테이블 수치 반영)
+        createMountedLot(mLabel, new BigDecimal("300"), mA04);
 
-        // [소형 45Ah]
+        // 6. BOM 생성
         createBom(pSmall, mLead, 6.0, 0.0);
-        createBom(pSmall, mPosPlate, 5, 0.01);
-        createBom(pSmall, mNegPlate, 5, 0.01);
-        createBom(pSmall, mSeparator, 10, 0.01);
+        createBom(pSmall, mPosPlate, 5.0, 0.01);
+        createBom(pSmall, mNegPlate, 5.0, 0.01);
+        createBom(pSmall, mSeparator, 10.0, 0.01);
         createBom(pSmall, mElectrolyte, 2.0, 0.02);
-        createBom(pSmall, mCase, 1, 0.0);
-        createBom(pSmall, mCover, 1, 0.0);
-        createBom(pSmall, mTerminal, 2, 0.0);
-        createBom(pSmall, mLabel, 1, 0.0);
+        createBom(pSmall, mCase, 1.0, 0.0);
+        createBom(pSmall, mCover, 1.0, 0.0);
+        createBom(pSmall, mTerminal, 2.0, 0.0);
+        createBom(pSmall, mLabel, 1.0, 0.0);
 
-        // [중형 65Ah]
         createBom(pMedium, mLead, 9.0, 0.0);
-        createBom(pMedium, mPosPlate, 6, 0.01);
-        createBom(pMedium, mNegPlate, 6, 0.01);
-        createBom(pMedium, mSeparator, 12, 0.01);
+        createBom(pMedium, mPosPlate, 6.0, 0.01);
+        createBom(pMedium, mNegPlate, 6.0, 0.01);
+        createBom(pMedium, mSeparator, 12.0, 0.01);
         createBom(pMedium, mElectrolyte, 3.0, 0.02);
-        createBom(pMedium, mCase, 1, 0.0);
-        createBom(pMedium, mCover, 1, 0.0);
-        createBom(pMedium, mTerminal, 2, 0.0);
-        createBom(pMedium, mLabel, 1, 0.0);
+        createBom(pMedium, mCase, 1.0, 0.0);
+        createBom(pMedium, mCover, 1.0, 0.0);
+        createBom(pMedium, mTerminal, 2.0, 0.0);
+        createBom(pMedium, mLabel, 1.0, 0.0);
 
-        // [대형 90Ah]
-        createBom(pLarge, mLead, 12, 0.0);
-        createBom(pLarge, mPosPlate, 8, 0.01);
-        createBom(pLarge, mNegPlate, 8, 0.01);
-        createBom(pLarge, mSeparator, 16, 0.01);
+        createBom(pLarge, mLead, 12.0, 0.0);
+        createBom(pLarge, mPosPlate, 8.0, 0.01);
+        createBom(pLarge, mNegPlate, 8.0, 0.01);
+        createBom(pLarge, mSeparator, 16.0, 0.01);
         createBom(pLarge, mElectrolyte, 4.0, 0.02);
-        createBom(pLarge, mCase, 1, 0.0);
-        createBom(pLarge, mCover, 1, 0.0);
-        createBom(pLarge, mTerminal, 2, 0.0);
-        createBom(pLarge, mLabel, 1, 0.0);
+        createBom(pLarge, mCase, 1.0, 0.0);
+        createBom(pLarge, mCover, 1.0, 0.0);
+        createBom(pLarge, mTerminal, 2.0, 0.0);
+        createBom(pLarge, mLabel, 1.0, 0.0);
 
         // ==========================================
-        // 5. 공정 및 설비 (A라인 / B라인 구축)`
-        // ==========================================
-        ProcessStep s1 = createStep("PROC-10", "전극공정(Electrode)", 10);
-        ProcessStep s2 = createStep("PROC-20", "조립공정(Assembly)", 20);
-        ProcessStep s3 = createStep("PROC-30", "활성화공정(Formation)", 30);
-        ProcessStep s4 = createStep("PROC-40", "팩 (Pack)", 40);
-        ProcessStep s5 = createStep("PROC-50", "최종 검사 (Inspection)", 50);
-
-        // Line A (메인 라인)
-        createMachine("MAC-A-01", "Electrode M/C #1", s1, true); // 납, 극판 투입
-        createMachine("MAC-A-02", "Assembly Line #1", s2, true); // 분리판, 케이스, 전해액 등 투입
-        createMachine("MAC-A-03", "Formation Sys #1", s3, true); // (자재 없음 or 추가 전해액)
-        createMachine("MAC-A-04", "Pack Line #1", s4, true);     // 라벨 투입
-        createMachine("MAC-A-05", "Inspector #1", s5, true);     // (자재 없음)
-
-//        // Line B (서브 라인 - 일부 가동 중지 상태 시뮬레이션)
-//        createMachine("MAC-B-01", "Stacking #B", s1, true);
-//        createMachine("MAC-B-02", "Packaging #B", s2, false); // 고장/대기 상황
-//        createMachine("MAC-B-03", "Injector #B", s3, true);
-//        createMachine("MAC-B-04", "Cycler #B", s4, true);
-//        createMachine("MAC-B-05", "Inspector #B", s5, true);
-
-        // ==========================================
-        // 6. 생산 이력 시뮬레이션 (과거/현재/미래)
+        // 7. 생산 이력 및 로그 시뮬레이션
         // ==========================================
 
-        // Case 1: [완료] 지난주 생산 완료된 작업 (소형 100개) -> 완제품 재고로 잡힘
-        createHistoryWorkOrder(pSmall, 100, WorkOrderStatus.DONE, 7);
+        // Case 1: [완료] 지난주 생산 완료 (소형 100개) -> 품질 검사 이력 추가
+        Lot historyLot = createHistoryWorkOrder(pSmall, 100, WorkOrderStatus.DONE, 7);
+        createDummyQualityLogs(historyLot, mA05, 100);
 
-        // Case 2: [진행중] 현재 생산 중인 작업 (중형 200개)
-        createRunningWorkOrder(pMedium, 200);
+        // Case 2: [진행중] 현재 생산 중 (중형 100개)
+        createRunningWorkOrder(pMedium, 100);
 
-        // Case 3: [대기] 내일 예정된 작업 (대형 50개)
-        createPlannedWorkOrder(pLarge, 50, 1);
+        // Case 3: [대기] 내일 예정 (대형 100개)
+        createPlannedWorkOrder(pLarge, 100, 1);
 
-        System.out.println("🎉 [Real Factory] 모든 데이터 셋업 완료! 생산 라인이 가동될 준비가 되었습니다.");
+        // [추가] 모든 설비의 초기 상태 로그 생성 (WAIT 상태)
+        createInitialMachineStatus(mA01);
+        createInitialMachineStatus(mA02);
+        createInitialMachineStatus(mA03);
+        createInitialMachineStatus(mA04);
+        createInitialMachineStatus(mA05);
+
+        // 센서 로그
+        createDummySensorLogs(mA01);
+        createDummySensorLogs(mA02);
+        createDummySensorLogs(mA03);
+        createDummySensorLogs(mA04);
+        createDummySensorLogs(mA05);
+
+        System.out.println("🎉 [Real Factory] 데이터 초기화 완료! (설비 상태 및 품질 이력 포함)");
     }
 
     // ==================================================================================
     // Helper Methods
     // ==================================================================================
+
+    // [추가] 설비 초기 상태(WAIT) 로그 생성
+    private void createInitialMachineStatus(Machine m) {
+        MachineStatusLog log = new MachineStatusLog();
+        log.setMachine(m);
+        log.setWorker(workerRepository.findByWorkerCode("SYSTEM").orElse(null));
+        log.setStatus("WAIT");
+        log.setStartTime(now().minusHours(24));
+        log.setEndTime(null);
+        machineStatusLogRepository.save(log);
+
+        m.setStatus(MachineStatus.WAIT);
+        machineRepository.save(m);
+    }
+
+    // [추가] 과거 생산 Lot에 대한 품질 검사 데이터 생성
+    private void createDummyQualityLogs(Lot lot, Machine inspector, int qty) {
+        Worker qcWorker = workerRepository.findByWorkerCode("QC-001").orElse(null);
+        Random random = new Random();
+
+        for(int i=0; i<qty; i++) {
+            boolean isFail = random.nextInt(100) < 5;
+            QualityTest qt = new QualityTest();
+            qt.setLot(lot);
+            qt.setMachine(inspector);
+            qt.setWorker(qcWorker);
+            qt.setResult(isFail ? QualityTestResult.FAIL : QualityTestResult.PASS);
+            qt.setTestedAt(lot.getCreatedAt().plusMinutes(i * 2L));
+            qualityTestRepository.save(qt);
+        }
+    }
+
+    private void createDummySensorLogs(Machine m) {
+        LocalDateTime baseTime = now().minusMinutes(10);
+        Random random = new Random();
+        for (int i = 0; i < 10; i++) {
+            SensorLog log = SensorLog.builder()
+                    .machine(m)
+                    .temperature(25.0 + (random.nextDouble() * 2 - 1))
+                    .humidity(45.0 + (random.nextDouble() * 4 - 2))
+                    .voltage(220.0 + (random.nextDouble() * 2 - 1))
+                    .recordedAt(baseTime.plusMinutes(i))
+                    .build();
+            sensorLogRepository.save(log);
+        }
+    }
 
     private void createWorker(String code, String name, String pw, Role role) {
         Worker w = new Worker();
@@ -178,70 +223,32 @@ public class DataInitializer implements CommandLineRunner {
     }
 
     private Product createProduct(String code, String name, int cap, int volt, String unit) {
-        Product p = Product.builder()
-                .productCode(code)
-                .productName(name)
-                .capacityAh(cap)
-                .voltage(volt)
-                .unit(unit)
-                .build();
+        Product p = Product.builder().productCode(code).productName(name).capacityAh(cap).voltage(volt).unit(unit).build();
         return productRepository.save(p);
     }
 
     private Material createMaterial(String name, String unit, int safeQty) {
         String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String code = String.format("MAT-%s-%04d", dateStr, matSeq++);
-
-        Material m = Material.builder()
-                .materialCode(code)
-                .materialName(name)
-                .unit(unit)
-                .safeQty(safeQty)
-                .createdAt(now())
-                .build();
+        Material m = Material.builder().materialCode(code).materialName(name).unit(unit).safeQty(safeQty).createdAt(now()).build();
         return materialRepository.save(m);
     }
 
-    // Lot를 2개 생성하여 선입선출 테스트 환경 조성
-    private void createMaterialLots(Material m, BigDecimal oldQty, BigDecimal newQty) {
-        // 1. Old Lot (5일 전 입고)
-        createSingleLot(m, oldQty, now().minusDays(5), "INIT-OLD");
-        // 2. New Lot (어제 입고)
-        createSingleLot(m, newQty, now().minusDays(1), "INIT-NEW");
-    }
-
-    private void createSingleLot(Material m, BigDecimal qty, LocalDateTime inputDate, String suffix) {
-        String dateStr = inputDate.format(DateTimeFormatter.ofPattern("yyMMdd"));
-        // Lot No 예: ML-260120-MAT01-INIT-OLD
-        String lotNo = String.format("ML-%s-%s-%s", dateStr, m.getMaterialCode().substring(13), suffix);
-
+    private void createMountedLot(Material m, BigDecimal qty, Machine machine) {
+        String dateStr = now().minusDays(1).format(DateTimeFormatter.ofPattern("yyMMdd"));
+        String lotNo = String.format("ML-%s-%s-INIT", dateStr, m.getMaterialCode().substring(13));
         MaterialLot ml = MaterialLot.builder()
-                .material(m)
-                .materialLotNo(lotNo)
-                .inQty(qty)
-                .remainQty(qty)
-                .status(MaterialLotStatus.AVAILABLE)
-                .inputDate(inputDate) // 입고일 중요 (FIFO 기준)
-                .build();
+                .material(m).materialLotNo(lotNo).inQty(qty).remainQty(qty)
+                .status(MaterialLotStatus.AVAILABLE).inputDate(now().minusDays(1))
+                .currentMachine(machine).build();
         materialLotRepository.save(ml);
-
         MaterialTx tx = MaterialTx.builder()
-                .txType(TxType.INBOUND)
-                .material(m)
-                .materialLot(ml)
-                .qty(qty)
-                .txTime(inputDate)
-                .build();
+                .txType(TxType.INBOUND).material(m).materialLot(ml).qty(qty).txTime(now().minusDays(1)).build();
         materialTxRepository.save(tx);
     }
 
     private void createBom(Product p, Material m, double qty, double scrap) {
-        bomRepository.save(BOM.builder()
-                .product(p)
-                .material(m)
-                .requiredQty(BigDecimal.valueOf(qty))
-                .scrapRate(BigDecimal.valueOf(scrap))
-                .build());
+        bomRepository.save(BOM.builder().product(p).material(m).requiredQty(BigDecimal.valueOf(qty)).scrapRate(BigDecimal.valueOf(scrap)).build());
     }
 
     private ProcessStep createStep(String code, String name, int seq) {
@@ -252,99 +259,57 @@ public class DataInitializer implements CommandLineRunner {
         return processStepRepository.save(step);
     }
 
-    private void createMachine(String code, String name, ProcessStep step, boolean active) {
+    private Machine createMachine(String code, String name, ProcessStep step, boolean active) {
         Machine m = new Machine();
-        m.setMachineCode(code);
-        m.setMachineName(name);
-        m.setProcessCode(step.getStepCode());
-        m.setStatus(active ? MachineStatus.RUN : MachineStatus.STOP); // 초기 상태
-        m.setIsActive(active);
-        machineRepository.save(m);
+        m.setMachineCode(code); m.setMachineName(name); m.setProcessCode(step.getStepCode());
+        m.setStatus(active ? MachineStatus.RUN : MachineStatus.STOP); m.setIsActive(active);
+        return machineRepository.save(m);
     }
 
-    // 과거 완료된 이력 (완제품 재고 생성 포함)
-    private void createHistoryWorkOrder(Product p, int qty, WorkOrderStatus status, int daysAgo) {
+    private Lot createHistoryWorkOrder(Product p, int qty, WorkOrderStatus status, int daysAgo) {
         LocalDateTime pastDate = now().minusDays(daysAgo);
         String woNo = "WO-" + pastDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-001";
-
         WorkOrder wo = new WorkOrder();
-        wo.setWorkOrderNo(woNo);
-        wo.setProduct(p);
-        wo.setPlannedQty(qty);
-        wo.setStartedAt(pastDate);
-        wo.setDueAt(pastDate.plusHours(8));
-        wo.setDueAt(pastDate.plusDays(1));
-        wo.setStatus(status);
-        wo.setCreatedAt(pastDate);
+        wo.setWorkOrderNo(woNo); wo.setProduct(p); wo.setPlannedQty(qty); wo.setStartedAt(pastDate);
+        wo.setDueAt(pastDate.plusDays(1)); wo.setStatus(status); wo.setCreatedAt(pastDate);
         workOrderRepository.save(wo);
 
-        // Lot 생성 및 완료 처리
-        Lot lot = new Lot();
+        Lot lot = new Lot(); // Lot.java를 수정해야 이 부분이 정상 동작합니다.
         lot.setLotNo("LOT-" + pastDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-001");
-        lot.setProduct(p);
-        lot.setWorkOrder(wo);
-        lot.setLotQty(qty);
-        lot.setStatus(LotStatus.COMPLETED); // 완료됨
-        lot.setCreatedAt(pastDate);
+        lot.setProduct(p); lot.setWorkOrder(wo); lot.setLotQty(qty); lot.setStatus(LotStatus.COMPLETED); lot.setCreatedAt(pastDate);
         lotRepository.save(lot);
 
-        // [중요] 완료된 건이므로 완제품 창고(FgInventory)에 재고 등록
-        FgInventory fg = FgInventory.builder()
-                .product(p)
-                .lot(lot)
-                .stockQty(qty)
-                .locationCode("WH-FG-A01")
-                .build();
+        FgInventory fg = FgInventory.builder().product(p).lot(lot).stockQty(qty).locationCode("WH-FG-A01").build();
         fgInventoryRepository.save(fg);
+
+        return lot;
     }
 
-    // 현재 진행 중인 이력
     private void createRunningWorkOrder(Product p, int qty) {
         String today = now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         String woNo = "WO-" + today + "-002";
-
         WorkOrder wo = new WorkOrder();
-        wo.setWorkOrderNo(woNo);
-        wo.setProduct(p);
-        wo.setPlannedQty(qty);
-        wo.setStartedAt(now().minusHours(2)); // 2시간 전 시작
-        wo.setDueAt(now().plusDays(2));
-        wo.setStatus(WorkOrderStatus.IN_PROGRESS);
-        wo.setCreatedAt(now());
+        wo.setWorkOrderNo(woNo); wo.setProduct(p); wo.setPlannedQty(qty); wo.setStartedAt(now().minusHours(2));
+        wo.setDueAt(now().plusDays(2)); wo.setStatus(WorkOrderStatus.IN_PROGRESS); wo.setCreatedAt(now());
         workOrderRepository.save(wo);
 
         Lot lot = new Lot();
         lot.setLotNo("LOT-" + today + "-002");
-        lot.setProduct(p);
-        lot.setWorkOrder(wo);
-        lot.setLotQty(qty);
-        lot.setStatus(LotStatus.IN_PROGRESS);
-        lot.setCreatedAt(now());
+        lot.setProduct(p); lot.setWorkOrder(wo); lot.setLotQty(qty); lot.setStatus(LotStatus.IN_PROGRESS); lot.setCreatedAt(now());
         lotRepository.save(lot);
     }
 
-    // 미래 예정된 이력
     private void createPlannedWorkOrder(Product p, int qty, int daysAfter) {
         LocalDateTime futureDate = now().plusDays(daysAfter);
         String woNo = "WO-" + futureDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-001";
-
         WorkOrder wo = new WorkOrder();
-        wo.setWorkOrderNo(woNo);
-        wo.setProduct(p);
-        wo.setPlannedQty(qty);
-        wo.setDueAt(futureDate.plusDays(1));
-        wo.setStatus(WorkOrderStatus.WAIT);
-        wo.setCreatedAt(now());
+        wo.setWorkOrderNo(woNo); wo.setProduct(p); wo.setPlannedQty(qty); wo.setDueAt(futureDate.plusDays(1));
+        wo.setStatus(WorkOrderStatus.WAIT); wo.setCreatedAt(now());
         workOrderRepository.save(wo);
 
-        // Lot은 아직 발행되지 않았거나, 계획 상태로 생성
         Lot lot = new Lot();
         lot.setLotNo("LOT-" + futureDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-PLAN");
-        lot.setProduct(p);
-        lot.setWorkOrder(wo);
-        lot.setLotQty(qty);
-        lot.setStatus(LotStatus.HOLD); // 생성만 됨
-        lot.setCreatedAt(now());
+        lot.setProduct(p); lot.setWorkOrder(wo); lot.setLotQty(qty); lot.setStatus(LotStatus.HOLD); lot.setCreatedAt(now());
         lotRepository.save(lot);
     }
 }
