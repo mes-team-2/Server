@@ -43,7 +43,7 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.getMaterialLots(materialId));
     }
 
-    // [추가] 자재 입고 등록 API
+    // 자재 입고 등록 API
     @PostMapping("/material/inbound")
     public ResponseEntity<String> inboundMaterial(@RequestBody MaterialInboundDto dto) {
         inventoryService.inboundMaterial(dto);

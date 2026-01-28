@@ -27,12 +27,11 @@ public class MachineController {
                 .map(wo -> {
                     Map<String, Object> response = new HashMap<>();
                     response.put("workOrderNo", wo.getWorkOrderNo());
-                    response.put("productName", wo.getProduct().getProductName());
                     response.put("plannedQty", wo.getPlannedQty());
-                    response.put("producedQty", 0);
+                    // [핵심] 설비가 BOM을 판단할 수 있게 제품 코드를 전달함
+                    response.put("productCode", wo.getProduct().getProductCode());
                     return ResponseEntity.ok(response);
                 })
-                // [수정] 에러 시에도 Map을 반환하여 타입 불일치 해결
                 .orElse(ResponseEntity.status(HttpStatus.NO_CONTENT)
                         .body(Collections.singletonMap("message", "진행 중인 작업지시 없음")));
     }
@@ -43,9 +42,22 @@ public class MachineController {
     }
 
     @PostMapping("/{machineCode}/workorder/complete")
-    public ResponseEntity<?> completeWorkOrder(@PathVariable String machineCode, @RequestBody Map<String, String> body) {
-        String workOrderNo = body.get("workOrderNo");
-        machineService.completeWorkOrder(workOrderNo);
-        return ResponseEntity.ok("작업지시(" + workOrderNo + ") 상태가 DONE으로 변경되었습니다.");
+    public ResponseEntity<?> completeWorkOrder(@PathVariable String machineCode, @RequestBody Map<String, Object> body) {
+        String workOrderNo = (String) body.get("workOrderNo");
+        // [수정] 실제 생산량(actualQty)을 받아서 서비스로 넘김 (없으면 0 처리)
+        int actualQty = body.containsKey("actualQty") ? Integer.parseInt(body.get("actualQty").toString()) : 0;
+
+        machineService.completeWorkOrder(machineCode, workOrderNo, actualQty);
+
+        return ResponseEntity.ok("작업지시(" + workOrderNo + ") 완료 처리 (실적: " + actualQty + ")");
+    }
+
+    @PostMapping("/{machineCode}/materials/{materialId}/replace")
+    public ResponseEntity<MachineMaterialDto> replaceMaterial(
+            @PathVariable String machineCode,
+            @PathVariable Long materialId) {
+
+        MachineMaterialDto newLot = machineService.replaceMaterial(machineCode, materialId);
+        return ResponseEntity.ok(newLot);
     }
 }

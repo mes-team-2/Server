@@ -34,7 +34,7 @@ public class DataInitializer implements CommandLineRunner {
     private final FgInventoryRepository fgInventoryRepository;
     private final SensorLogRepository sensorLogRepository;
 
-    // [추가] 설비 상태 및 품질 검사 초기화를 위한 리포지토리
+    // 추가 리포지토리
     private final MachineStatusLogRepository machineStatusLogRepository;
     private final QualityTestRepository qualityTestRepository;
 
@@ -43,7 +43,6 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        // 중복 초기화 방지
         if (workerRepository.count() > 0) {
             System.out.println("⚠️ 데이터가 이미 존재하여 초기화를 건너뜁니다.");
             return;
@@ -88,17 +87,17 @@ public class DataInitializer implements CommandLineRunner {
         Material mLabel = createMaterial("라벨", "EA", 5000);
 
         // 5. 자재 LOT 생성 및 설비 장착
-        createMountedLot(mLead, new BigDecimal("2700"), mA01);
-        createMountedLot(mPosPlate, new BigDecimal("1900"), mA01);
-        createMountedLot(mNegPlate, new BigDecimal("1900"), mA01);
+        createMountedLot(mLead, new BigDecimal("5400"), mA01);
+        createMountedLot(mPosPlate, new BigDecimal("3800"), mA01);
+        createMountedLot(mNegPlate, new BigDecimal("3800"), mA01);
 
-        createMountedLot(mSeparator, new BigDecimal("3800"), mA02);
-        createMountedLot(mElectrolyte, new BigDecimal("900"), mA02);
-        createMountedLot(mCase, new BigDecimal("300"), mA02);
-        createMountedLot(mCover, new BigDecimal("300"), mA02);
-        createMountedLot(mTerminal, new BigDecimal("600"), mA02);
+        createMountedLot(mSeparator, new BigDecimal("7600"), mA02);
+        createMountedLot(mElectrolyte, new BigDecimal("1800"), mA02);
+        createMountedLot(mCase, new BigDecimal("600"), mA02);
+        createMountedLot(mCover, new BigDecimal("600"), mA02);
+        createMountedLot(mTerminal, new BigDecimal("1200"), mA02);
 
-        createMountedLot(mLabel, new BigDecimal("300"), mA04);
+        createMountedLot(mLabel, new BigDecimal("600"), mA04);
 
         // 6. BOM 생성
         createBom(pSmall, mLead, 6.0, 0.0);
@@ -135,17 +134,19 @@ public class DataInitializer implements CommandLineRunner {
         // 7. 생산 이력 및 로그 시뮬레이션
         // ==========================================
 
-        // Case 1: [완료] 지난주 생산 완료 (소형 100개) -> 품질 검사 이력 추가
+        // Case 1: [완료] 지난주 생산 완료 (소형 100개) -> Batch Lot 1개로 생성
         Lot historyLot = createHistoryWorkOrder(pSmall, 100, WorkOrderStatus.DONE, 7);
+        // 완료된 Lot에 대한 품질 검사 이력 생성
         createDummyQualityLogs(historyLot, mA05, 100);
 
         // Case 2: [진행중] 현재 생산 중 (중형 100개)
+        // 시뮬레이터가 접속하면 이 작업을 가져가서 시작합니다.
         createRunningWorkOrder(pMedium, 100);
 
         // Case 3: [대기] 내일 예정 (대형 100개)
         createPlannedWorkOrder(pLarge, 100, 1);
 
-        // [추가] 모든 설비의 초기 상태 로그 생성 (WAIT 상태)
+        // 초기 설비 상태 생성
         createInitialMachineStatus(mA01);
         createInitialMachineStatus(mA02);
         createInitialMachineStatus(mA03);
@@ -159,14 +160,13 @@ public class DataInitializer implements CommandLineRunner {
         createDummySensorLogs(mA04);
         createDummySensorLogs(mA05);
 
-        System.out.println("🎉 [Real Factory] 데이터 초기화 완료! (설비 상태 및 품질 이력 포함)");
+        System.out.println("🎉 [Real Factory] 데이터 초기화 완료! (소/중/대 각 100개분, Batch Lot 적용)");
     }
 
     // ==================================================================================
     // Helper Methods
     // ==================================================================================
 
-    // [추가] 설비 초기 상태(WAIT) 로그 생성
     private void createInitialMachineStatus(Machine m) {
         MachineStatusLog log = new MachineStatusLog();
         log.setMachine(m);
@@ -180,7 +180,6 @@ public class DataInitializer implements CommandLineRunner {
         machineRepository.save(m);
     }
 
-    // [추가] 과거 생산 Lot에 대한 품질 검사 데이터 생성
     private void createDummyQualityLogs(Lot lot, Machine inspector, int qty) {
         Worker qcWorker = workerRepository.findByWorkerCode("QC-001").orElse(null);
         Random random = new Random();
@@ -266,6 +265,7 @@ public class DataInitializer implements CommandLineRunner {
         return machineRepository.save(m);
     }
 
+    // [수정] Batch Lot 개념 적용 (WO당 1개의 Lot)
     private Lot createHistoryWorkOrder(Product p, int qty, WorkOrderStatus status, int daysAgo) {
         LocalDateTime pastDate = now().minusDays(daysAgo);
         String woNo = "WO-" + pastDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-001";
@@ -274,9 +274,15 @@ public class DataInitializer implements CommandLineRunner {
         wo.setDueAt(pastDate.plusDays(1)); wo.setStatus(status); wo.setCreatedAt(pastDate);
         workOrderRepository.save(wo);
 
-        Lot lot = new Lot(); // Lot.java를 수정해야 이 부분이 정상 동작합니다.
-        lot.setLotNo("LOT-" + pastDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-001");
-        lot.setProduct(p); lot.setWorkOrder(wo); lot.setLotQty(qty); lot.setStatus(LotStatus.COMPLETED); lot.setCreatedAt(pastDate);
+        // Batch Lot 생성
+        Lot lot = Lot.builder()
+                .lotNo("LOT-" + pastDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-001")
+                .product(p)
+                .workOrder(wo)
+                .lotQty(qty)
+                .status(LotStatus.COMPLETED)
+                .createdAt(pastDate)
+                .build();
         lotRepository.save(lot);
 
         FgInventory fg = FgInventory.builder().product(p).lot(lot).stockQty(qty).locationCode("WH-FG-A01").build();
@@ -293,9 +299,15 @@ public class DataInitializer implements CommandLineRunner {
         wo.setDueAt(now().plusDays(2)); wo.setStatus(WorkOrderStatus.IN_PROGRESS); wo.setCreatedAt(now());
         workOrderRepository.save(wo);
 
-        Lot lot = new Lot();
-        lot.setLotNo("LOT-" + today + "-002");
-        lot.setProduct(p); lot.setWorkOrder(wo); lot.setLotQty(qty); lot.setStatus(LotStatus.IN_PROGRESS); lot.setCreatedAt(now());
+        // Batch Lot 미리 생성 (설비들이 이 Lot에 기록을 누적함)
+        Lot lot = Lot.builder()
+                .lotNo("LOT-" + today + "-002")
+                .product(p)
+                .workOrder(wo)
+                .lotQty(qty)
+                .status(LotStatus.IN_PROGRESS)
+                .createdAt(now())
+                .build();
         lotRepository.save(lot);
     }
 
@@ -307,9 +319,14 @@ public class DataInitializer implements CommandLineRunner {
         wo.setStatus(WorkOrderStatus.WAIT); wo.setCreatedAt(now());
         workOrderRepository.save(wo);
 
-        Lot lot = new Lot();
-        lot.setLotNo("LOT-" + futureDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-PLAN");
-        lot.setProduct(p); lot.setWorkOrder(wo); lot.setLotQty(qty); lot.setStatus(LotStatus.HOLD); lot.setCreatedAt(now());
+        Lot lot = Lot.builder()
+                .lotNo("LOT-" + futureDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-PLAN")
+                .product(p)
+                .workOrder(wo)
+                .lotQty(qty)
+                .status(LotStatus.HOLD)
+                .createdAt(now())
+                .build();
         lotRepository.save(lot);
     }
 }

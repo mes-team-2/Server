@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface MaterialLotRepository extends JpaRepository<MaterialLot, Long> {
 
@@ -17,6 +18,9 @@ public interface MaterialLotRepository extends JpaRepository<MaterialLot, Long> 
     // 단, 재고가 남아있는(AVAILABLE) 것만 가져옴
     @Query("SELECT ml FROM MaterialLot ml WHERE ml.material = :material AND ml.status = 'AVAILABLE' ORDER BY ml.inputDate ASC")
     List<MaterialLot> findAvailableLotsByMaterial(@Param("material") Material material);
+
+    Optional<MaterialLot> findFirstByMaterial_MaterialIdAndCurrentMachineIsNullAndStatusOrderByInputDateAsc(
+            Long materialId, MaterialLotStatus status);
 
     List<MaterialLot> findByMaterialOrderByInputDateDesc(Material material);
 

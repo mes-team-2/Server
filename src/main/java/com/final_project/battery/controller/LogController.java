@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/log")
@@ -36,6 +38,12 @@ public class LogController {
             log.error("생산 로그 저장 실패: ", e);
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    @PostMapping("/status")
+    public ResponseEntity<?> saveStatusLog(@RequestBody Map<String, String> body) {
+        logService.saveMachineStatusLog(body);
+        return ResponseEntity.ok("상태 변경 저장 완료");
     }
 
 }
