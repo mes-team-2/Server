@@ -24,7 +24,8 @@ public class WorkOrder {
 
     private Integer plannedQty;
     private LocalDateTime startedAt;
-    private LocalDateTime dueAt;
+    private LocalDateTime dueDate;
+    private LocalDateTime endedAt;
     @Enumerated(EnumType.STRING)
     private WorkOrderStatus status;
     private LocalDateTime createdAt;

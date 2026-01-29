@@ -68,7 +68,7 @@ public class MachineService {
             lot.setLotQty(actualQty); // [수정] Lot의 최종 수량도 실적으로 업데이트
 
             wo.setStatus(WorkOrderStatus.DONE);
-            wo.setDueAt(LocalDateTime.now());
+            wo.setEndedAt(LocalDateTime.now());
 
             // [핵심 수정] 계획 수량(100)이 아니라 실제 만든 수량(예: 112)으로 입고
             FgInventory fg = FgInventory.builder()
