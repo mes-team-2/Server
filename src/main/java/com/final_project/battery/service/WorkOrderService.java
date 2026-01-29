@@ -6,17 +6,21 @@ import com.final_project.battery.domain.WorkOrder;
 import com.final_project.battery.domain.common.LotStatus;
 import com.final_project.battery.domain.common.WorkOrderStatus;
 import com.final_project.battery.dto.request.WorkOrderCreateDto;
+import com.final_project.battery.dto.response.WorkOrderResponseDto;
 import com.final_project.battery.repository.LotRepository;
 import com.final_project.battery.repository.ProductRepository;
 import com.final_project.battery.repository.WorkOrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -72,6 +76,16 @@ public class WorkOrderService {
         lotRepository.save(lot);
 
         log.info("✅ 신규 작업지시 생성 완료: {} (제품: {})", woNo, product.getProductName());
-        return workOrder.getWorkOrderId();
+        return null;
+    }
+
+    @Transactional(readOnly = true)
+    public List<WorkOrderResponseDto> getWorkOrderList() {
+        // 최신순(내림차순) 정렬
+        List<WorkOrder> list = workOrderRepository.findAll(Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        return list.stream()
+                .map(WorkOrderResponseDto::new)
+                .collect(Collectors.toList());
     }
 }
