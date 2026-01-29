@@ -296,7 +296,7 @@ public class DataInitializer implements CommandLineRunner {
         String woNo = "WO-" + today + "-002";
         WorkOrder wo = new WorkOrder();
         wo.setWorkOrderNo(woNo); wo.setProduct(p); wo.setPlannedQty(qty); wo.setStartedAt(now().minusHours(2));
-        wo.setDueDate(now().plusDays(2)); wo.setEndedAt(null); wo.setStatus(WorkOrderStatus.IN_PROGRESS); wo.setCreatedAt(now());
+        wo.setDueDate(now().plusDays(2)); wo.setEndedAt(LocalDateTime.now().minusHours(1)); wo.setStatus(WorkOrderStatus.DONE); wo.setCreatedAt(now());
         workOrderRepository.save(wo);
 
         // Batch Lot 미리 생성 (설비들이 이 Lot에 기록을 누적함)
@@ -315,8 +315,8 @@ public class DataInitializer implements CommandLineRunner {
         LocalDateTime futureDate = now().plusDays(daysAfter);
         String woNo = "WO-" + futureDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-001";
         WorkOrder wo = new WorkOrder();
-        wo.setWorkOrderNo(woNo); wo.setProduct(p); wo.setPlannedQty(qty); wo.setDueDate(futureDate.plusDays(1)); wo.setEndedAt(null);
-        wo.setStatus(WorkOrderStatus.WAIT); wo.setCreatedAt(now());
+        wo.setWorkOrderNo(woNo); wo.setProduct(p); wo.setPlannedQty(qty); wo.setStartedAt(now().minusHours(1));wo.setDueDate(futureDate.plusDays(1)); wo.setEndedAt(LocalDateTime.now());
+        wo.setStatus(WorkOrderStatus.DONE); wo.setCreatedAt(now());
         workOrderRepository.save(wo);
 
         Lot lot = Lot.builder()
