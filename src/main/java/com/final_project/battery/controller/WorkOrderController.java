@@ -1,6 +1,7 @@
 package com.final_project.battery.controller;
 
 import com.final_project.battery.dto.request.WorkOrderCreateDto;
+import com.final_project.battery.dto.response.WorkOrderDetailDto;
 import com.final_project.battery.dto.response.WorkOrderResponseDto;
 import com.final_project.battery.service.WorkOrderService;
 import lombok.RequiredArgsConstructor;
@@ -34,5 +35,11 @@ public class WorkOrderController {
         response.put("workOrderId", workOrderId);
 
         return ResponseEntity.ok(response);
+    }
+
+//    작업지시 상세 조회
+    @GetMapping("/{workOrderNo}")
+    public ResponseEntity<WorkOrderDetailDto> getWorkOrderDetail(@PathVariable String workOrderNo) {
+        return ResponseEntity.ok(workOrderService.getWorkOrderDetail(workOrderNo));
     }
 }
