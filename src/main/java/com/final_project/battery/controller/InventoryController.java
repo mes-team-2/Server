@@ -5,8 +5,10 @@ import com.final_project.battery.dto.request.MaterialRegisterDto;
 import com.final_project.battery.dto.response.FgInventoryResponseDto;
 import com.final_project.battery.dto.response.MaterialInventoryResponseDto;
 import com.final_project.battery.dto.response.MaterialLotResponseDto;
+import com.final_project.battery.dto.response.MaterialTxResponseDto;
 import com.final_project.battery.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/inventory")
 @RequiredArgsConstructor
+@Slf4j
 public class InventoryController {
     private final InventoryService inventoryService;
 
@@ -48,5 +51,12 @@ public class InventoryController {
     public ResponseEntity<String> inboundMaterial(@RequestBody MaterialInboundDto dto) {
         inventoryService.inboundMaterial(dto);
         return ResponseEntity.ok("입고 처리가 완료되었습니다.");
+    }
+
+    // 자재 입출고 이력 리스트 조회 API
+    @GetMapping("/materialtx")
+    public ResponseEntity<List<MaterialTxResponseDto>> getMaterialTxList() {
+        log.info("요청은 들어옴");
+        return ResponseEntity.ok(inventoryService.txList());
     }
 }

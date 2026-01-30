@@ -8,6 +8,7 @@ import com.final_project.battery.dto.request.MaterialRegisterDto;
 import com.final_project.battery.dto.response.FgInventoryResponseDto;
 import com.final_project.battery.dto.response.MaterialInventoryResponseDto;
 import com.final_project.battery.dto.response.MaterialLotResponseDto;
+import com.final_project.battery.dto.response.MaterialTxResponseDto;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -209,5 +210,10 @@ public class InventoryService {
                 .build();
 
         materialTxRepository.save(tx);
+    }
+
+    public List<MaterialTxResponseDto> txList() {
+        // 처음부터 dto 형태로 가져와서 변환과정 필요 없음.
+        return materialTxRepository.materialTxList();
     }
 }

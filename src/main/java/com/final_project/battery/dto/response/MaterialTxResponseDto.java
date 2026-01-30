@@ -1,0 +1,32 @@
+package com.final_project.battery.dto.response;
+
+import com.final_project.battery.domain.Lot;
+import com.final_project.battery.domain.common.TxType;
+import lombok.*;
+
+import java.time.LocalDateTime;
+
+@Getter
+public class MaterialTxResponseDto {
+
+    private LocalDateTime txTime;
+    private TxType txType;
+    private String materialName;
+    private java.math.BigDecimal qty;
+    private String unit;
+
+    // ✅ 생성자 단 1개
+    public MaterialTxResponseDto(
+            LocalDateTime txTime,
+            TxType txType,
+            String materialName,
+            java.math.BigDecimal qty,
+            String unit
+    ) {
+        this.txTime = txTime;
+        this.txType = txType;
+        this.materialName = materialName;
+        this.qty = qty;
+        this.unit = unit;
+    }
+}
