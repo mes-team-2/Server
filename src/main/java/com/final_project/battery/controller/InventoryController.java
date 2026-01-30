@@ -52,11 +52,4 @@ public class InventoryController {
         inventoryService.inboundMaterial(dto);
         return ResponseEntity.ok("입고 처리가 완료되었습니다.");
     }
-
-    // 자재 입출고 이력 리스트 조회 API
-    @GetMapping("/materialtx")
-    public ResponseEntity<List<MaterialTxResponseDto>> getMaterialTxList() {
-        log.info("요청은 들어옴");
-        return ResponseEntity.ok(inventoryService.txList());
-    }
 }

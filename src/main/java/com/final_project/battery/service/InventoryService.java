@@ -212,8 +212,4 @@ public class InventoryService {
         materialTxRepository.save(tx);
     }
 
-    public List<MaterialTxResponseDto> txList() {
-        // 처음부터 dto 형태로 가져와서 변환과정 필요 없음.
-        return materialTxRepository.materialTxList();
-    }
 }
