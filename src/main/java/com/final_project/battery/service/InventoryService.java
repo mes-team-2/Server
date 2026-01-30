@@ -11,6 +11,8 @@ import com.final_project.battery.dto.response.MaterialLotResponseDto;
 import com.final_project.battery.dto.response.MaterialTxResponseDto;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -212,8 +214,9 @@ public class InventoryService {
         materialTxRepository.save(tx);
     }
 
-    public List<MaterialTxResponseDto> txList() {
+    // 자재 이력 조회 페이지 가져오기
+    public Page<MaterialTxResponseDto> txList(Pageable pageable) {
         // 처음부터 dto 형태로 가져와서 변환과정 필요 없음.
-        return materialTxRepository.materialTxList();
+        return materialTxRepository.listAll(pageable);
     }
 }

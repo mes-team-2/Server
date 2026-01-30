@@ -9,6 +9,10 @@ import com.final_project.battery.dto.response.MaterialTxResponseDto;
 import com.final_project.battery.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,8 +59,8 @@ public class InventoryController {
 
     // 자재 입출고 이력 리스트 조회 API
     @GetMapping("/materialtx")
-    public ResponseEntity<List<MaterialTxResponseDto>> getMaterialTxList() {
+    public ResponseEntity<Page<MaterialTxResponseDto>> getMaterialTxList(@PageableDefault(size = 20, sort = "txTime", direction = Sort.Direction.DESC) Pageable pageable) {
         log.info("요청은 들어옴");
-        return ResponseEntity.ok(inventoryService.txList());
+        return ResponseEntity.ok(inventoryService.txList(pageable));
     }
 }
