@@ -33,8 +33,6 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final FgInventoryRepository fgInventoryRepository;
     private final SensorLogRepository sensorLogRepository;
-
-    // 추가 리포지토리
     private final MachineStatusLogRepository machineStatusLogRepository;
     private final QualityTestRepository qualityTestRepository;
 
@@ -99,61 +97,53 @@ public class DataInitializer implements CommandLineRunner {
 
         createMountedLot(mLabel, new BigDecimal("600"), mA04);
 
-        // 6. BOM 생성
-        createBom(pSmall, mLead, 6.0, 0.0);
-        createBom(pSmall, mPosPlate, 5.0, 0.01);
-        createBom(pSmall, mNegPlate, 5.0, 0.01);
-        createBom(pSmall, mSeparator, 10.0, 0.01);
-        createBom(pSmall, mElectrolyte, 2.0, 0.02);
-        createBom(pSmall, mCase, 1.0, 0.0);
-        createBom(pSmall, mCover, 1.0, 0.0);
-        createBom(pSmall, mTerminal, 2.0, 0.0);
-        createBom(pSmall, mLabel, 1.0, 0.0);
+        // 6. BOM 생성 (공정 정보 추가)
+        // [소형]
+        createBom(pSmall, mLead, 6.0, 0.0, "전극공정");
+        createBom(pSmall, mPosPlate, 5.0, 0.01, "전극공정");
+        createBom(pSmall, mNegPlate, 5.0, 0.01, "전극공정");
+        createBom(pSmall, mSeparator, 10.0, 0.01, "조립공정");
+        createBom(pSmall, mElectrolyte, 2.0, 0.02, "조립공정");
+        createBom(pSmall, mCase, 1.0, 0.0, "조립공정");
+        createBom(pSmall, mCover, 1.0, 0.0, "조립공정");
+        createBom(pSmall, mTerminal, 2.0, 0.0, "조립공정");
+        createBom(pSmall, mLabel, 1.0, 0.0, "팩공정");
 
-        createBom(pMedium, mLead, 9.0, 0.0);
-        createBom(pMedium, mPosPlate, 6.0, 0.01);
-        createBom(pMedium, mNegPlate, 6.0, 0.01);
-        createBom(pMedium, mSeparator, 12.0, 0.01);
-        createBom(pMedium, mElectrolyte, 3.0, 0.02);
-        createBom(pMedium, mCase, 1.0, 0.0);
-        createBom(pMedium, mCover, 1.0, 0.0);
-        createBom(pMedium, mTerminal, 2.0, 0.0);
-        createBom(pMedium, mLabel, 1.0, 0.0);
+        // [중형]
+        createBom(pMedium, mLead, 9.0, 0.0, "전극공정");
+        createBom(pMedium, mPosPlate, 6.0, 0.01, "전극공정");
+        createBom(pMedium, mNegPlate, 6.0, 0.01, "전극공정");
+        createBom(pMedium, mSeparator, 12.0, 0.01, "조립공정");
+        createBom(pMedium, mElectrolyte, 3.0, 0.02, "조립공정");
+        createBom(pMedium, mCase, 1.0, 0.0, "조립공정");
+        createBom(pMedium, mCover, 1.0, 0.0, "조립공정");
+        createBom(pMedium, mTerminal, 2.0, 0.0, "조립공정");
+        createBom(pMedium, mLabel, 1.0, 0.0, "팩공정");
 
-        createBom(pLarge, mLead, 12.0, 0.0);
-        createBom(pLarge, mPosPlate, 8.0, 0.01);
-        createBom(pLarge, mNegPlate, 8.0, 0.01);
-        createBom(pLarge, mSeparator, 16.0, 0.01);
-        createBom(pLarge, mElectrolyte, 4.0, 0.02);
-        createBom(pLarge, mCase, 1.0, 0.0);
-        createBom(pLarge, mCover, 1.0, 0.0);
-        createBom(pLarge, mTerminal, 2.0, 0.0);
-        createBom(pLarge, mLabel, 1.0, 0.0);
+        // [대형]
+        createBom(pLarge, mLead, 12.0, 0.0, "전극공정");
+        createBom(pLarge, mPosPlate, 8.0, 0.01, "전극공정");
+        createBom(pLarge, mNegPlate, 8.0, 0.01, "전극공정");
+        createBom(pLarge, mSeparator, 16.0, 0.01, "조립공정");
+        createBom(pLarge, mElectrolyte, 4.0, 0.02, "조립공정");
+        createBom(pLarge, mCase, 1.0, 0.0, "조립공정");
+        createBom(pLarge, mCover, 1.0, 0.0, "조립공정");
+        createBom(pLarge, mTerminal, 2.0, 0.0, "조립공정");
+        createBom(pLarge, mLabel, 1.0, 0.0, "팩공정");
 
-        // ==========================================
         // 7. 생산 이력 및 로그 시뮬레이션
-        // ==========================================
-
-        // Case 1: [완료] 지난주 생산 완료 (소형 100개) -> Batch Lot 1개로 생성
         Lot historyLot = createHistoryWorkOrder(pSmall, 100, WorkOrderStatus.DONE, 7);
-        // 완료된 Lot에 대한 품질 검사 이력 생성
         createDummyQualityLogs(historyLot, mA05, 100);
 
-        // Case 2: [진행중] 현재 생산 중 (중형 100개)
-        // 시뮬레이터가 접속하면 이 작업을 가져가서 시작합니다.
         createRunningWorkOrder(pMedium, 100);
-
-        // Case 3: [대기] 내일 예정 (대형 100개)
         createPlannedWorkOrder(pLarge, 100, 1);
 
-        // 초기 설비 상태 생성
         createInitialMachineStatus(mA01);
         createInitialMachineStatus(mA02);
         createInitialMachineStatus(mA03);
         createInitialMachineStatus(mA04);
         createInitialMachineStatus(mA05);
 
-        // 센서 로그
         createDummySensorLogs(mA01);
         createDummySensorLogs(mA02);
         createDummySensorLogs(mA03);
@@ -163,10 +153,20 @@ public class DataInitializer implements CommandLineRunner {
         System.out.println("🎉 [Real Factory] 데이터 초기화 완료! (소/중/대 각 100개분, Batch Lot 적용)");
     }
 
-    // ==================================================================================
     // Helper Methods
-    // ==================================================================================
 
+    // [수정] BOM 생성 시 공정명(note) 추가
+    private void createBom(Product p, Material m, double qty, double scrap, String process) {
+        bomRepository.save(BOM.builder()
+                .product(p)
+                .material(m)
+                .requiredQty(BigDecimal.valueOf(qty))
+                .scrapRate(BigDecimal.valueOf(scrap))
+                .note(process) // 공정 정보 저장
+                .build());
+    }
+
+    // ... (나머지 메서드는 기존과 동일하게 유지) ...
     private void createInitialMachineStatus(Machine m) {
         MachineStatusLog log = new MachineStatusLog();
         log.setMachine(m);
@@ -175,7 +175,6 @@ public class DataInitializer implements CommandLineRunner {
         log.setStartTime(now().minusHours(24));
         log.setEndTime(null);
         machineStatusLogRepository.save(log);
-
         m.setStatus(MachineStatus.WAIT);
         machineRepository.save(m);
     }
@@ -183,7 +182,6 @@ public class DataInitializer implements CommandLineRunner {
     private void createDummyQualityLogs(Lot lot, Machine inspector, int qty) {
         Worker qcWorker = workerRepository.findByWorkerCode("QC-001").orElse(null);
         Random random = new Random();
-
         for(int i=0; i<qty; i++) {
             boolean isFail = random.nextInt(100) < 5;
             QualityTest qt = new QualityTest();
@@ -246,10 +244,6 @@ public class DataInitializer implements CommandLineRunner {
         materialTxRepository.save(tx);
     }
 
-    private void createBom(Product p, Material m, double qty, double scrap) {
-        bomRepository.save(BOM.builder().product(p).material(m).requiredQty(BigDecimal.valueOf(qty)).scrapRate(BigDecimal.valueOf(scrap)).build());
-    }
-
     private ProcessStep createStep(String code, String name, int seq) {
         ProcessStep step = new ProcessStep();
         step.setStepCode(code);
@@ -265,7 +259,6 @@ public class DataInitializer implements CommandLineRunner {
         return machineRepository.save(m);
     }
 
-    // [수정] Batch Lot 개념 적용 (WO당 1개의 Lot)
     private Lot createHistoryWorkOrder(Product p, int qty, WorkOrderStatus status, int daysAgo) {
         LocalDateTime pastDate = now().minusDays(daysAgo);
         String woNo = "WO-" + pastDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-001";
@@ -274,7 +267,6 @@ public class DataInitializer implements CommandLineRunner {
         wo.setDueDate(pastDate.plusDays(1)); wo.setEndedAt(pastDate.plusHours(5)); wo.setStatus(status); wo.setCreatedAt(pastDate);
         workOrderRepository.save(wo);
 
-        // Batch Lot 생성
         Lot lot = Lot.builder()
                 .lotNo("LOT-" + pastDate.format(DateTimeFormatter.ofPattern("yyyyMMdd")) + "-001")
                 .product(p)
@@ -299,7 +291,6 @@ public class DataInitializer implements CommandLineRunner {
         wo.setDueDate(now().plusDays(2)); wo.setEndedAt(LocalDateTime.now().minusHours(1)); wo.setStatus(WorkOrderStatus.DONE); wo.setCreatedAt(now());
         workOrderRepository.save(wo);
 
-        // Batch Lot 미리 생성 (설비들이 이 Lot에 기록을 누적함)
         Lot lot = Lot.builder()
                 .lotNo("LOT-" + today + "-002")
                 .product(p)
