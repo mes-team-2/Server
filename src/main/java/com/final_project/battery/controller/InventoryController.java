@@ -103,5 +103,11 @@ public class InventoryController {
         return inventoryService.getMaterialTxSummary(type, keyword, startDate, endDate);
     }
 
-
+    // 자재 입출고 상세
+    @GetMapping("/materialtx/{id}")
+    public ResponseEntity<MaterialTxDetailResponseDto> getDetail(
+            @PathVariable Integer id
+    ) {
+        return ResponseEntity.ok(inventoryService.getDetail(id));
+    }
 }

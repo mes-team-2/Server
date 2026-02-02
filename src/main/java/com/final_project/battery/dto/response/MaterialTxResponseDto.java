@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 public class MaterialTxResponseDto {
-
+    private Integer id;
     private LocalDateTime txTime;
     private TxType txType;
     private String materialName;
@@ -18,6 +18,7 @@ public class MaterialTxResponseDto {
 
     // ✅ 생성자 단 1개
     public MaterialTxResponseDto(
+            Integer id,
             LocalDateTime txTime,
             TxType txType,
             String materialName,
@@ -25,6 +26,7 @@ public class MaterialTxResponseDto {
             java.math.BigDecimal qty,
             String unit
     ) {
+        this.id = id;
         this.txTime = txTime;
         this.txType = txType;
         this.materialName = materialName;

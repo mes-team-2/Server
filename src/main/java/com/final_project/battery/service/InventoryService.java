@@ -295,4 +295,37 @@ public class InventoryService {
                 rate
         );
     }
+
+    // 자재 이력 상세 dto
+    public MaterialTxDetailResponseDto getDetail(Integer id) {
+
+        MaterialTxDetailResponseDto q =
+                materialTxRepository.findDetail(id);
+
+        BigDecimal afterQty = q.getRemainQty();
+        BigDecimal qty = q.getQty();
+
+        BigDecimal beforeQty;
+
+        if (q.getTxType() == TxType.INBOUND) {
+            beforeQty = afterQty.subtract(qty);
+        } else {
+            beforeQty = afterQty.add(qty);
+        }
+
+        // 임시값 덮어쓰기
+        q.setBeforeQty(beforeQty);
+
+        // Response DTO로 변환
+        return MaterialTxDetailResponseDto.builder()
+                .id(q.getId())
+                .txType(q.getTxType())
+                .txTime(q.getTxTime())
+                .qty(q.getQty())
+                .beforeQty(q.getBeforeQty())
+                .remainQty(afterQty)
+                .materialCode(q.getMaterialCode())
+                .materialName(q.getMaterialName())
+                .build();
+    }
 }
