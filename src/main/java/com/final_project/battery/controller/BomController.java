@@ -1,5 +1,6 @@
 package com.final_project.battery.controller;
 
+import com.final_project.battery.dto.request.BomCreateDto;
 import com.final_project.battery.dto.request.BomUpdateRequestDto;
 import com.final_project.battery.dto.response.BomResponseDto;
 import com.final_project.battery.service.BomService;
@@ -20,6 +21,13 @@ public class BomController {
     @GetMapping("/{productCode}")
     public ResponseEntity<List<BomResponseDto>> getBomList(@PathVariable String productCode) {
         return ResponseEntity.ok(bomService.getBomListByProduct(productCode));
+    }
+
+    // BOM 등록
+    @PostMapping
+    public ResponseEntity<String> createBom(@RequestBody BomCreateDto dto) {
+        bomService.createBom(dto);
+        return ResponseEntity.ok("BOM 항목이 추가되었습니다.");
     }
 
     // BOM 수정
