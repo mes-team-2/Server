@@ -313,6 +313,11 @@ public class InventoryService {
             beforeQty = afterQty.add(qty);
         }
 
+        // 자재 마이너스 값 안되게
+        if (beforeQty.compareTo(BigDecimal.ZERO) < 0) {
+            beforeQty = BigDecimal.ZERO;
+        }
+
         // 임시값 덮어쓰기
         q.setBeforeQty(beforeQty);
 
