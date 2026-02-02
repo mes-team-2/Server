@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/login", "/auth/reissue").permitAll()
                                 .requestMatchers("/api/machines/**").permitAll()
                                 .requestMatchers("/api/bom/**").authenticated()
+                                .requestMatchers("/api/master/**").authenticated()
                         .requestMatchers("/auth/logout").authenticated()
                                 .requestMatchers("/api/log/**").permitAll()
 
