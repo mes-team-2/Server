@@ -12,6 +12,7 @@ public class MaterialTxResponseDto {
     private LocalDateTime txTime;
     private TxType txType;
     private String materialName;
+    private String materialNo;
     private java.math.BigDecimal qty;
     private String unit;
 
@@ -20,12 +21,14 @@ public class MaterialTxResponseDto {
             LocalDateTime txTime,
             TxType txType,
             String materialName,
+            String materialNo,
             java.math.BigDecimal qty,
             String unit
     ) {
         this.txTime = txTime;
         this.txType = txType;
         this.materialName = materialName;
+        this.materialNo = materialNo;
         this.qty = qty;
         this.unit = unit;
     }

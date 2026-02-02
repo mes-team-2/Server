@@ -1,11 +1,9 @@
 package com.final_project.battery.controller;
 
+import com.final_project.battery.domain.common.TxType;
 import com.final_project.battery.dto.request.MaterialInboundDto;
 import com.final_project.battery.dto.request.MaterialRegisterDto;
-import com.final_project.battery.dto.response.FgInventoryResponseDto;
-import com.final_project.battery.dto.response.MaterialInventoryResponseDto;
-import com.final_project.battery.dto.response.MaterialLotResponseDto;
-import com.final_project.battery.dto.response.MaterialTxResponseDto;
+import com.final_project.battery.dto.response.*;
 import com.final_project.battery.service.InventoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,9 +11,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -57,10 +58,50 @@ public class InventoryController {
         return ResponseEntity.ok("입고 처리가 완료되었습니다.");
     }
 
-    // 자재 입출고 이력 리스트 조회 API
+    // 자재 입출고 이력 페이지 조회 API
     @GetMapping("/materialtx")
-    public ResponseEntity<Page<MaterialTxResponseDto>> getMaterialTxList(@PageableDefault(size = 20, sort = "txTime", direction = Sort.Direction.DESC) Pageable pageable) {
-        log.info("요청은 들어옴");
-        return ResponseEntity.ok(inventoryService.txList(pageable));
+    public ResponseEntity<Page<MaterialTxResponseDto>> getMaterialTxList(
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate startDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endDate,
+
+            @PageableDefault(size = 20, sort = "txTime", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+
+        log.info("type={}, keyword={}, start={}, end={}",
+                type, keyword, startDate, endDate);
+
+        return ResponseEntity.ok(
+                inventoryService.search(
+                        type,
+                        keyword,
+                        startDate,
+                        endDate,
+                        pageable
+                )
+        );
     }
+
+    // 자재 입출고 qty 조건부 전체
+    @GetMapping("/materialtx/summary")
+    public MaterialTxAllResponseDto getSummary(
+            @RequestParam(required = false) TxType type,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate startDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate endDate
+    ) {
+        return inventoryService.getMaterialTxSummary(type, keyword, startDate, endDate);
+    }
+
+
 }

@@ -5,10 +5,7 @@ import com.final_project.battery.domain.common.MaterialLotStatus;
 import com.final_project.battery.domain.common.TxType;
 import com.final_project.battery.dto.request.MaterialInboundDto;
 import com.final_project.battery.dto.request.MaterialRegisterDto;
-import com.final_project.battery.dto.response.FgInventoryResponseDto;
-import com.final_project.battery.dto.response.MaterialInventoryResponseDto;
-import com.final_project.battery.dto.response.MaterialLotResponseDto;
-import com.final_project.battery.dto.response.MaterialTxResponseDto;
+import com.final_project.battery.dto.response.*;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,6 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -215,8 +214,85 @@ public class InventoryService {
     }
 
     // 자재 이력 조회 페이지 가져오기
-    public Page<MaterialTxResponseDto> txList(Pageable pageable) {
-        // 처음부터 dto 형태로 가져와서 변환과정 필요 없음.
-        return materialTxRepository.listAll(pageable);
+    public Page<MaterialTxResponseDto> search(
+            String type,
+            String keyword,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable
+    ) {
+
+        TxType txType = null;
+        if (type != null && !type.isBlank()) {
+            txType = TxType.valueOf(type); // "INBOUND", "CONSUME"
+        }
+
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        if (startDate != null) {
+            start = startDate.atStartOfDay();
+        }
+        if (endDate != null) {
+            end = endDate.atTime(23, 59, 59);
+        }
+
+        if (keyword != null && keyword.isBlank()) {
+            keyword = null;
+        }
+
+        return materialTxRepository.search(
+                txType,
+                keyword,
+                start,
+                end,
+                pageable
+        );
+    }
+    // 자재 이력 합계
+    public MaterialTxAllResponseDto getMaterialTxSummary(
+            TxType type,
+            String keyword,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        if (startDate != null) {
+            start = startDate.atStartOfDay(); // 00:00:00
+        }
+
+        if (endDate != null) {
+            end = endDate.atTime(23, 59, 59); // 하루 끝
+        }
+
+        // 1. DB에서 합계만 가져옴 (rate는 0 상태)
+        MaterialTxAllResponseDto raw =
+                materialTxRepository.getSummary(type, keyword, start, end);
+
+        BigDecimal inQty = raw.getInQty();
+        BigDecimal outQty = raw.getOutUseQty();
+
+        // null 방어
+        if (inQty == null) inQty = BigDecimal.ZERO;
+        if (outQty == null) outQty = BigDecimal.ZERO;
+
+        // 2. rate 계산
+        BigDecimal rate = BigDecimal.ZERO;
+
+        if (inQty.compareTo(BigDecimal.ZERO) > 0) {
+            rate = outQty
+                    .divide(inQty, 4, RoundingMode.HALF_UP) // 소수 4자리 계산
+                    .multiply(BigDecimal.valueOf(100))      // %
+                    .setScale(1, RoundingMode.HALF_UP);     // 소수 1자리
+        }
+
+        // 3. 새 DTO 만들어 반환
+        return new MaterialTxAllResponseDto(
+                inQty,
+                outQty,
+                rate
+        );
     }
 }
