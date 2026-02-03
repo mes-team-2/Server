@@ -1,6 +1,8 @@
 package com.final_project.battery.controller;
 
 import com.final_project.battery.domain.common.WorkOrderStatus;
+import com.final_project.battery.dto.request.MachineCreateDto;
+import com.final_project.battery.dto.request.MachineUpdateDto;
 import com.final_project.battery.dto.response.MachineMaterialDto;
 import com.final_project.battery.dto.response.MachineResponseDto;
 import com.final_project.battery.repository.WorkOrderRepository;
@@ -21,6 +23,22 @@ import java.util.Map;
 public class MachineController {
     private final MachineService machineService;
     private final WorkOrderRepository workOrderRepository;
+
+    // 설비 등록
+    @PostMapping
+    public ResponseEntity<String> createMachine(@RequestBody MachineCreateDto dto) {
+        machineService.createMachine(dto);
+        return ResponseEntity.ok("설비가 등록되었습니다.");
+    }
+
+    // 설비 수정
+    @PutMapping("/{machineId}")
+    public ResponseEntity<String> updateMachine(
+            @PathVariable Long machineId,
+            @RequestBody MachineUpdateDto dto) {
+        machineService.updateMachine(machineId, dto);
+        return ResponseEntity.ok("설비 정보가 수정되었습니다.");
+    }
 
     @GetMapping
     public ResponseEntity<List<MachineResponseDto>> getMachineList() {

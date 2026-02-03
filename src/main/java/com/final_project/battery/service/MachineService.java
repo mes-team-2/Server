@@ -1,10 +1,9 @@
 package com.final_project.battery.service;
 
 import com.final_project.battery.domain.*;
-import com.final_project.battery.domain.common.InventoryStatus;
-import com.final_project.battery.domain.common.LotStatus;
-import com.final_project.battery.domain.common.MaterialLotStatus;
-import com.final_project.battery.domain.common.WorkOrderStatus;
+import com.final_project.battery.domain.common.*;
+import com.final_project.battery.dto.request.MachineCreateDto;
+import com.final_project.battery.dto.request.MachineUpdateDto;
 import com.final_project.battery.dto.response.MachineMaterialDto;
 import com.final_project.battery.dto.response.MachineResponseDto;
 import com.final_project.battery.repository.*;
@@ -27,6 +26,54 @@ public class MachineService {
     private final WorkOrderRepository workOrderRepository;
     private final LotRepository lotRepository;
     private final FgInventoryRepository fgInventoryRepository;
+    private final ProcessStepRepository processStepRepository;
+
+    @Transactional
+    public void createMachine(MachineCreateDto dto) {
+        // 중복 체크
+        if (machineRepository.findByMachineCode(dto.getMachineCode()).isPresent()) {
+            throw new RuntimeException("이미 존재하는 설비 코드입니다: " + dto.getMachineCode());
+        }
+
+        Machine machine = new Machine();
+        machine.setMachineCode(dto.getMachineCode());
+        machine.setMachineName(dto.getMachineName());
+        machine.setProcessCode(dto.getProcessCode());
+        machine.setIsActive(dto.getActive());
+        if (Boolean.TRUE.equals(dto.getActive())) {
+            machine.setStatus(MachineStatus.WAIT);
+        } else {
+            machine.setStatus(MachineStatus.STOP);
+        }
+
+        machineRepository.save(machine);
+    }
+
+    @Transactional
+    public void updateMachine(Long machineId, MachineUpdateDto dto) {
+        Machine machine = machineRepository.findById(machineId)
+                .orElseThrow(() -> new RuntimeException("설비가 존재하지 않습니다."));
+
+        if (dto.getMachineName() != null) machine.setMachineName(dto.getMachineName());
+        if (dto.getProcessCode() != null) machine.setProcessCode(dto.getProcessCode());
+
+        // 사용 여부 변경에 따른 상태 자동 동기화
+        if (dto.getActive() != null) {
+            boolean isNowActive = dto.getActive();
+            machine.setIsActive(isNowActive);
+
+            if (isNowActive) {
+                // 사용으로 전환 시: 기존에 STOP(정지) 상태였다면 -> WAIT(대기)로 변경해줌
+                // (RUN이나 ERROR 상태였다면 그대로 유지하거나 로직에 따라 초기화)
+                if (machine.getStatus() == MachineStatus.STOP) {
+                    machine.setStatus(MachineStatus.WAIT);
+                }
+            } else {
+                // 미사용으로 전환 시: 강제로 STOP(정지) 처리
+                machine.setStatus(MachineStatus.STOP);
+            }
+        }
+    }
 
     // 설비 전체 목록 조회
     @Transactional(readOnly = true)
