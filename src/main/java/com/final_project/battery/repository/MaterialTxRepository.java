@@ -3,6 +3,7 @@ package com.final_project.battery.repository;
 import com.final_project.battery.domain.Lot;
 import com.final_project.battery.domain.MaterialTx;
 import com.final_project.battery.domain.common.TxType;
+import com.final_project.battery.dto.response.MaterialLotHistoryDto;
 import com.final_project.battery.dto.response.MaterialTxAllResponseDto;
 import com.final_project.battery.dto.response.MaterialTxDetailResponseDto;
 import com.final_project.battery.dto.response.MaterialTxResponseDto;
@@ -111,5 +112,18 @@ public interface MaterialTxRepository extends JpaRepository<MaterialTx, Integer>
     """)
     MaterialTxDetailResponseDto findDetail(@Param("id") Integer id);
 
-
+    @Query("""
+select new com.final_project.battery.dto.response.MaterialLotHistoryDto(
+    max(tx.txTime),
+    l.lotNo,
+    sum(tx.qty)
+)
+from MaterialTx tx
+join tx.lot l
+where tx.materialLot.materialLotId = :lotId
+  and tx.txType = com.final_project.battery.domain.common.TxType.CONSUME
+group by l.lotNo
+order by max(tx.txTime) desc
+""")
+    List<MaterialLotHistoryDto> findConsumeHistory(Long lotId);
 }

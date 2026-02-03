@@ -5,6 +5,7 @@ import com.final_project.battery.domain.Material;
 import com.final_project.battery.domain.MaterialLot;
 import com.final_project.battery.domain.common.MaterialLotStatus;
 import com.final_project.battery.dto.response.MaterialLotAllResponseDto;
+import com.final_project.battery.dto.response.MaterialLotBasicInfoDto;
 import com.final_project.battery.dto.response.MaterialLotManagementResponseDto;
 import io.micrometer.common.KeyValues;
 import org.springframework.data.domain.Page;
@@ -115,4 +116,22 @@ where (:status is null or l.status = :status)
             Pageable pageable
     );
 
+
+    // 자재lot 상세 기본정보
+    @Query("""
+        select new com.final_project.battery.dto.response.MaterialLotBasicInfoDto(
+            ml.materialLotId,
+            ml.materialLotNo,
+            ml.status,
+            ml.inputDate,
+            m.materialCode,
+            m.materialName,
+            m.unit,
+            ml.remainQty
+        )
+        from MaterialLot ml
+        join ml.material m
+        where ml.materialLotId = :lotId
+    """)
+    Optional<MaterialLotBasicInfoDto> findBasicInfo(@Param("lotId") Long lotId);
 }

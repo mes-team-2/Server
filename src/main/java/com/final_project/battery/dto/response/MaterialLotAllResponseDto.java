@@ -6,19 +6,19 @@ import lombok.Getter;
 public class MaterialLotAllResponseDto {
 
     private Long total;    // 전체 LOT
-    private Long running;  // AVAILABLE
-    private Long waiting;  // HOLD
+    private Long waiting;  // AVAILABLE 대기중
+    private Long running;  // HOLD 생산 중
     private Long empty;    // EXHAUSTED
 
     public MaterialLotAllResponseDto(
             Long total,
-            Long running,
             Long waiting,
+            Long running,
             Long empty
     ) {
         this.total = total;
-        this.running = running;
         this.waiting = waiting;
+        this.running = running;
         this.empty = empty;
     }
 }

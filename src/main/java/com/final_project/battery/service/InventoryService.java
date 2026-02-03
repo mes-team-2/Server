@@ -414,4 +414,36 @@ public class InventoryService {
         );
     }
 
+
+
+    public MaterialLotManagementDetailResponseDto getMaterialLotDetail(Long lotId) {
+
+        // 1. 기본 정보
+        MaterialLotBasicInfoDto basic =
+                materialLotRepository.findBasicInfo(lotId)
+                        .orElseThrow(() -> new RuntimeException("LOT 없음"));
+
+        // 2. 이력 정보
+        List<MaterialLotHistoryDto> histories =
+                materialTxRepository.findConsumeHistory(lotId);
+
+        // 3. 최근 상태 변경일 (임시 = 마지막 txTime)
+        LocalDateTime lastChanged =
+                histories.isEmpty()
+                        ? basic.inputDate()
+                        : histories.get(0).getInputDate();
+
+        // 4. 합치기
+        return new MaterialLotManagementDetailResponseDto(
+                basic.materialLotNo(),
+                basic.status(),
+                basic.inputDate(),
+                basic.materialCode(),
+                basic.materialName(),
+                basic.unit(),
+                basic.remainQty(),
+                histories,
+                lastChanged
+        );
+    }
 }

@@ -4,6 +4,7 @@ import com.final_project.battery.domain.Lot;
 import com.final_project.battery.domain.common.LotStatus;
 import com.final_project.battery.dto.response.LotResponseDto;
 import com.final_project.battery.dto.response.MaterialLotAllResponseDto;
+import com.final_project.battery.dto.response.MaterialLotManagementDetailResponseDto;
 import com.final_project.battery.dto.response.MaterialLotManagementResponseDto;
 import com.final_project.battery.repository.LotRepository;
 import com.final_project.battery.service.InventoryService;
@@ -100,6 +101,15 @@ public class LotController {
                         startDate,
                         endDate
                 )
+        );
+    }
+
+    @GetMapping("/materialLot/{lotId}")
+    public ResponseEntity<MaterialLotManagementDetailResponseDto> getDetail(
+            @PathVariable Long lotId
+    ) {
+        return ResponseEntity.ok(
+                inventoryService.getMaterialLotDetail(lotId)
         );
     }
 }
