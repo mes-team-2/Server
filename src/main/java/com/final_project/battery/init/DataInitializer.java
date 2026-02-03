@@ -55,7 +55,8 @@ public class DataInitializer implements CommandLineRunner {
         // ==========================================
         // [핵심 멤버 - 출근(ON)]
         Worker w1 = createWorker("W-260203-0001", "우민규", "1234", Role.ADMIN, true);
-        Worker w2 = createWorker("W-260203-0002", "김현수", "1234", Role.OPERATOR, true);
+        Worker tester = createWorker("test", "테스터", "1234", Role.ADMIN, true);
+        Worker w2 = createWorker("W-260203-0002", "이현수", "1234", Role.OPERATOR, true);
         Worker w3 = createWorker("W-260203-0003", "양찬종", "1234", Role.OPERATOR, true);
         Worker w4 = createWorker("W-260203-0004", "김하린", "1234", Role.OPERATOR, true);
 
