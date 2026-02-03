@@ -22,6 +22,10 @@ public class WorkOrder {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "manager_id")
+    private Worker manager;
+
     private Integer plannedQty;
     private LocalDateTime startedAt;
     private LocalDateTime dueDate;

@@ -31,12 +31,16 @@ public class WorkOrderService {
     private final LotRepository lotRepository;
     private final ProcessLogRepository processLogRepository;
     private final MaterialTxRepository materialTxRepository;
+    private final WorkerRepository workerRepository;
 
     @Transactional
     public Long createWorkOrder(WorkOrderCreateDto dto) {
         // 1. 제품 조회
         Product product = productRepository.findByProductCode(dto.getProductCode())
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 제품 코드입니다."));
+
+        Worker manager = workerRepository.findByWorkerCode(dto.getWorkerCode())
+                .orElseThrow(() -> new RuntimeException("작업자 정보 없음"));
 
         // 2. 작업지시 번호 생성 (WO-yyyyMMdd-XXXX)
         String today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -56,6 +60,7 @@ public class WorkOrderService {
         workOrder.setPlannedQty(dto.getPlannedQty());
         workOrder.setStartedAt(LocalDateTime.now());
         workOrder.setDueDate(dueDate);
+        workOrder.setManager(manager);
         workOrder.setEndedAt(null);
         workOrder.setStatus(WorkOrderStatus.IN_PROGRESS);
         workOrder.setCreatedAt(LocalDateTime.now());

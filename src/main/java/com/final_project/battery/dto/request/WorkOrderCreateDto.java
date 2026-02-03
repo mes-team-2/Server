@@ -11,4 +11,5 @@ public class WorkOrderCreateDto {
     private String productCode;
     private Integer plannedQty;
     private String dueDate;
+    private String workerCode;
 }
