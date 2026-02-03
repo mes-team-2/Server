@@ -15,4 +15,6 @@ public class TokenDto {
     private Long refreshTokenExpiresIn;
 
     private String workerName;
+    private String workerCode;
+    private String role;
 }

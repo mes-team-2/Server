@@ -95,10 +95,11 @@ public class AuthService {
 
     // 중복되는 이름 조회 로직을 메서드로 분리
     private void setWorkerName(TokenDto tokenDto, String workerId) {
-        System.out.println("setWorkerName 메서드 진입");
-
         Worker worker = workerRepository.findById(Long.parseLong(workerId))
                 .orElseThrow(() -> new CustomException(ErrorCode.WORKER_NOT_FOUND));
+
         tokenDto.setWorkerName(worker.getWorkerName());
+        tokenDto.setWorkerCode(worker.getWorkerCode());
+        tokenDto.setRole(worker.getRole().toString());
     }
 }
