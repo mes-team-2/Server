@@ -110,4 +110,5 @@ public class InventoryController {
     ) {
         return ResponseEntity.ok(inventoryService.getDetail(id));
     }
+
 }

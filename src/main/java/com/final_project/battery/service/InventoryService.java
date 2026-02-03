@@ -333,4 +333,85 @@ public class InventoryService {
                 .materialName(q.getMaterialName())
                 .build();
     }
+
+
+    // LOT 목록 조회
+    public Page<MaterialLotManagementResponseDto> searchLot(
+            String status,      // 프론트에서 String으로 받음
+            String keyword,
+            LocalDate startDate,
+            LocalDate endDate,
+            Pageable pageable
+    ) {
+
+        MaterialLotStatus lotStatus = null;
+
+        // status 문자열 → ENUM 변환
+        if (status != null && !status.isBlank()) {
+            lotStatus = MaterialLotStatus.valueOf(status);
+        }
+
+        // 날짜 변환
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        if (startDate != null) {
+            start = startDate.atStartOfDay();
+        }
+
+        if (endDate != null) {
+            end = endDate.atTime(23, 59, 59);
+        }
+
+        // keyword 공백 처리
+        if (keyword != null && keyword.isBlank()) {
+            keyword = null;
+        }
+
+        return materialLotRepository.searchLot(
+                lotStatus,
+                keyword,
+                start,
+                end,
+                pageable
+        );
+    }
+
+    // LOT 합계 조회 (카드)
+    public MaterialLotAllResponseDto getSummary(
+            String status,
+            String keyword,
+            LocalDate startDate,
+            LocalDate endDate
+    ) {
+
+        MaterialLotStatus lotStatus = null;
+
+        if (status != null && !status.isBlank()) {
+            lotStatus = MaterialLotStatus.valueOf(status);
+        }
+
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+
+        if (startDate != null) {
+            start = startDate.atStartOfDay();
+        }
+
+        if (endDate != null) {
+            end = endDate.atTime(23, 59, 59);
+        }
+
+        if (keyword != null && keyword.isBlank()) {
+            keyword = null;
+        }
+
+        return materialLotRepository.getSummary(
+                lotStatus,
+                keyword,
+                start,
+                end
+        );
+    }
+
 }
