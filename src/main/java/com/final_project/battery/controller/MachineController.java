@@ -2,6 +2,7 @@ package com.final_project.battery.controller;
 
 import com.final_project.battery.domain.common.WorkOrderStatus;
 import com.final_project.battery.dto.response.MachineMaterialDto;
+import com.final_project.battery.dto.response.MachineResponseDto;
 import com.final_project.battery.repository.WorkOrderRepository;
 import com.final_project.battery.service.MachineService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,11 @@ import java.util.Map;
 public class MachineController {
     private final MachineService machineService;
     private final WorkOrderRepository workOrderRepository;
+
+    @GetMapping
+    public ResponseEntity<List<MachineResponseDto>> getMachineList() {
+        return ResponseEntity.ok(machineService.getAllMachines());
+    }
 
     @GetMapping("/{machineCode}/workorder")
     public ResponseEntity<Map<String, Object>> getCurrentWorkOrder(@PathVariable String machineCode) {

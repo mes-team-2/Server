@@ -6,6 +6,7 @@ import com.final_project.battery.domain.common.LotStatus;
 import com.final_project.battery.domain.common.MaterialLotStatus;
 import com.final_project.battery.domain.common.WorkOrderStatus;
 import com.final_project.battery.dto.response.MachineMaterialDto;
+import com.final_project.battery.dto.response.MachineResponseDto;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,14 @@ public class MachineService {
     private final WorkOrderRepository workOrderRepository;
     private final LotRepository lotRepository;
     private final FgInventoryRepository fgInventoryRepository;
+
+    // 설비 전체 목록 조회
+    @Transactional(readOnly = true)
+    public List<MachineResponseDto> getAllMachines() {
+        return machineRepository.findAll().stream()
+                .map(MachineResponseDto::new)
+                .collect(Collectors.toList());
+    }
 
     @Transactional(readOnly = true)
     public List<MachineMaterialDto> getMountedMaterials(String machineCode) {
