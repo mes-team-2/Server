@@ -25,7 +25,7 @@ public class WorkOrderController {
         return ResponseEntity.ok(workOrderService.getWorkOrderList());
     }
 
-    // 작업지시 등록
+    // 작업 시작
     @PostMapping
     public ResponseEntity<Map<String, Object>> createWorkOrder(@RequestBody WorkOrderCreateDto dto) {
         Long workOrderId = workOrderService.createWorkOrder(dto);
@@ -35,6 +35,12 @@ public class WorkOrderController {
         response.put("workOrderId", workOrderId);
 
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{workOrderNo}/start")
+    public ResponseEntity<String> startWorkOrder(@PathVariable String workOrderNo) {
+        workOrderService.startWorkOrder(workOrderNo);
+        return ResponseEntity.ok("작업이 시작되었습니다.");
     }
 
 //    작업지시 상세 조회

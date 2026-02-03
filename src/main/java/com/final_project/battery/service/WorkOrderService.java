@@ -62,7 +62,7 @@ public class WorkOrderService {
         workOrder.setDueDate(dueDate);
         workOrder.setManager(manager);
         workOrder.setEndedAt(null);
-        workOrder.setStatus(WorkOrderStatus.IN_PROGRESS);
+        workOrder.setStatus(WorkOrderStatus.WAIT);
         workOrder.setCreatedAt(LocalDateTime.now());
 
         workOrderRepository.save(workOrder);
@@ -75,7 +75,7 @@ public class WorkOrderService {
                 .product(product)
                 .workOrder(workOrder)
                 .lotQty(dto.getPlannedQty())
-                .status(LotStatus.IN_PROGRESS)
+                .status(LotStatus.HOLD)
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -83,6 +83,28 @@ public class WorkOrderService {
 
         log.info("✅ 신규 작업지시 생성 완료: {} (제품: {})", woNo, product.getProductName());
         return null;
+    }
+
+    @Transactional
+    public void startWorkOrder(String workOrderNo) {
+        WorkOrder wo = workOrderRepository.findByWorkOrderNo(workOrderNo)
+                .orElseThrow(() -> new RuntimeException("작업지시 없음"));
+
+        if (wo.getStatus() != WorkOrderStatus.WAIT) {
+            throw new RuntimeException("대기 상태인 작업지시만 시작할 수 있습니다.");
+        }
+
+        // 상태 변경 및 시작 시간 기록
+        wo.setStatus(WorkOrderStatus.IN_PROGRESS);
+        wo.setStartedAt(LocalDateTime.now());
+
+        // 연관된 Lot 상태도 변경
+        Lot lot = lotRepository.findFirstByWorkOrder(wo).orElse(null);
+        if (lot != null) {
+            lot.setStatus(LotStatus.IN_PROGRESS);
+        }
+
+        log.info("🚀 작업 시작: {}", workOrderNo);
     }
 
     @Transactional(readOnly = true)
