@@ -232,7 +232,15 @@ public class DataInitializer implements CommandLineRunner {
                     productionLogRepository.save(pl);
 
                     // 3. 불량 로그 (불량 발생 시)
-                    for(int i=0; i<defects; i++) {
+                    String machineCode = m.getMachineCode();
+
+                    DefectType[] allowedTypes =
+                            DEFECT_TYPE_BY_MACHINE.getOrDefault(
+                                    machineCode,
+                                    DefectType.values() // fallback
+                            );
+
+                    for (int i = 0; i < defects; i++) {
                         DefectLog dl = new DefectLog();
                         dl.setMachine(m);
                         dl.setWorker(worker);
@@ -241,11 +249,12 @@ public class DataInitializer implements CommandLineRunner {
                         dl.setDefectQty(1);
                         dl.setCreatedAt(current.plusMinutes(rand.nextInt(50)));
 
-                        // 공정별 불량 유형 랜덤 할당
-                        DefectType[] types = DefectType.values();
-                        dl.setDefectType(types[rand.nextInt(types.length)]);
+                        // ✅ 설비별 허용 불량만 랜덤 할당
+                        dl.setDefectType(allowedTypes[rand.nextInt(allowedTypes.length)]);
+
                         defectLogRepository.save(dl);
                     }
+
                 }
             }
             current = current.plusHours(1);
@@ -262,6 +271,14 @@ public class DataInitializer implements CommandLineRunner {
                     .build());
         }
     }
+    private static final Map<String, DefectType[]> DEFECT_TYPE_BY_MACHINE = Map.of(
+            "MAC-A-01", new DefectType[]{DefectType.SCRATCH, DefectType.THICKNESS_ERROR},
+            "MAC-A-02", new DefectType[]{DefectType.MISALIGNMENT, DefectType.MISSING_PART},
+            "MAC-A-03", new DefectType[]{DefectType.LOW_VOLTAGE, DefectType.HIGH_TEMP},
+            "MAC-A-04", new DefectType[]{DefectType.WELDING_ERROR, DefectType.LABEL_ERROR},
+            "MAC-A-05", new DefectType[]{DefectType.DIMENSION_ERROR, DefectType.FOREIGN_MATERIAL}
+    );
+
 
     // ... (기존 createWorker, createMachine, createBom 등 Helper 메서드들은 그대로 유지)
     // 아래 코드는 기존 코드 복사해서 그대로 두시면 됩니다. (지면 관계상 생략하지 않고 핵심만 넣음)
