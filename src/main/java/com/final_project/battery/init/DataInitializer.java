@@ -71,11 +71,11 @@ public class DataInitializer implements CommandLineRunner {
         // ==========================================
         // 2. 공정 및 설비 생성 (상태 다양화)
         // ==========================================
-        ProcessStep s1 = createStep("PROC-10", "전극공정(Electrode)", 10);
-        ProcessStep s2 = createStep("PROC-20", "조립공정(Assembly)", 20);
-        ProcessStep s3 = createStep("PROC-30", "활성화공정(Formation)", 30);
-        ProcessStep s4 = createStep("PROC-40", "팩공정(Pack)", 40);
-        ProcessStep s5 = createStep("PROC-50", "검사공정(Inspection)", 50);
+        ProcessStep s1 = createStep("PROC-010", "전극공정(Electrode)", 10);
+        ProcessStep s2 = createStep("PROC-020", "조립공정(Assembly)", 20);
+        ProcessStep s3 = createStep("PROC-030", "활성화공정(Formation)", 30);
+        ProcessStep s4 = createStep("PROC-040", "팩공정(Pack)", 40);
+        ProcessStep s5 = createStep("PROC-050", "검사공정(Inspection)", 50);
 
         // [A라인: 가동 중]
         Machine mA01 = createMachine("MAC-A-01", "Electrode M/C #1", s1);
@@ -137,7 +137,10 @@ public class DataInitializer implements CommandLineRunner {
         createMountedLot(mTerminal, new BigDecimal("1200"), mA02);
         createMountedLot(mLabel, new BigDecimal("600"), mA04);
 
-        // BOM
+        // ==========================================
+        // [수정] BOM 생성 (소형, 중형, 대형 모두 포함)
+        // ==========================================
+        // [소형]
         createBom(pSmall, mLead, 6.0, 0.0, "전극공정");
         createBom(pSmall, mPosPlate, 5.0, 0.01, "전극공정");
         createBom(pSmall, mNegPlate, 5.0, 0.01, "전극공정");
@@ -147,6 +150,28 @@ public class DataInitializer implements CommandLineRunner {
         createBom(pSmall, mCover, 1.0, 0.0, "조립공정");
         createBom(pSmall, mTerminal, 2.0, 0.0, "조립공정");
         createBom(pSmall, mLabel, 1.0, 0.0, "팩공정");
+
+        // [중형]
+        createBom(pMedium, mLead, 9.0, 0.0, "전극공정");
+        createBom(pMedium, mPosPlate, 6.0, 0.01, "전극공정");
+        createBom(pMedium, mNegPlate, 6.0, 0.01, "전극공정");
+        createBom(pMedium, mSeparator, 12.0, 0.01, "조립공정");
+        createBom(pMedium, mElectrolyte, 3.0, 0.02, "조립공정");
+        createBom(pMedium, mCase, 1.0, 0.0, "조립공정");
+        createBom(pMedium, mCover, 1.0, 0.0, "조립공정");
+        createBom(pMedium, mTerminal, 2.0, 0.0, "조립공정");
+        createBom(pMedium, mLabel, 1.0, 0.0, "팩공정");
+
+        // [대형]
+        createBom(pLarge, mLead, 12.0, 0.0, "전극공정");
+        createBom(pLarge, mPosPlate, 8.0, 0.01, "전극공정");
+        createBom(pLarge, mNegPlate, 8.0, 0.01, "전극공정");
+        createBom(pLarge, mSeparator, 16.0, 0.01, "조립공정");
+        createBom(pLarge, mElectrolyte, 4.0, 0.02, "조립공정");
+        createBom(pLarge, mCase, 1.0, 0.0, "조립공정");
+        createBom(pLarge, mCover, 1.0, 0.0, "조립공정");
+        createBom(pLarge, mTerminal, 2.0, 0.0, "조립공정");
+        createBom(pLarge, mLabel, 1.0, 0.0, "팩공정");
 
         // ==========================================
         // 5. 생산 이력 및 센서 로그
@@ -164,8 +189,6 @@ public class DataInitializer implements CommandLineRunner {
         createDummySensorLogs(mA01);
         createDummySensorLogs(mA02);
 
-        // 에러난 설비에도 센서 데이터는 찍힘 (이상치)
-        createDummySensorLogs(mB02);
 
         System.out.println("🎉 [Real Factory] 데이터 초기화 완료!");
         System.out.println("   - 작업자: 10명 (출근 6명, 퇴근 4명)");
@@ -221,8 +244,6 @@ public class DataInitializer implements CommandLineRunner {
         m.setIsActive(true); // 설비 자체는 사용 중 (고장나도 설비는 active)
         return machineRepository.save(m);
     }
-
-    // ... (나머지 createBom, createProduct, createMaterial 등은 기존 로직 유지) ...
 
     private void createBom(Product p, Material m, double qty, double scrap, String process) {
         bomRepository.save(BOM.builder().product(p).material(m).requiredQty(BigDecimal.valueOf(qty)).scrapRate(BigDecimal.valueOf(scrap)).note(process).build());
