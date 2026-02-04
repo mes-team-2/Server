@@ -33,6 +33,8 @@ public class BomService {
                 .orElseThrow(() -> new RuntimeException("제품 없음"));
 
         return bomRepository.findByProduct(product).stream()
+                // [New] 소요량이 0보다 큰 것만 필터링 (0이면 삭제된 것으로 간주하여 목록에서 제외)
+                .filter(bom -> bom.getRequiredQty().compareTo(BigDecimal.ZERO) > 0)
                 .map(BomResponseDto::new)
                 .collect(Collectors.toList());
     }
