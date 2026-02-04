@@ -29,6 +29,7 @@ public class InventoryService {
     private final BomRepository bomRepository;
     private final MaterialRepository materialRepository;
     private final MaterialLotRepository materialLotRepository;
+    private final LotRepository lotRepository;
 
     // 1. 완제품 입고 (검사 공정 통과 시 호출)
     @Transactional
@@ -455,4 +456,47 @@ public class InventoryService {
     ) {
         return fgInventoryRepository.searchFgInventory(keyword, startDate, endDate);
     }
+
+    // 완제품 재고 상세 조회
+    public FgInventoryManagementDetailResponseDto getFgDetail(String productCode) {
+
+        List<Lot> lots = lotRepository.findByProductCodeWithDetails(productCode);
+
+        if (lots.isEmpty()) {
+            throw new RuntimeException("해당 제품 없음");
+        }
+
+        Product product = lots.get(0).getProduct();
+
+        // 총 재고
+        int totalQty = lots.stream()
+                .mapToInt(Lot::getLotQty)
+                .sum();
+
+        // histories 만들기
+        List<FgInventoryLotHistoryDto> histories = lots.stream()
+                .map(lot -> {
+                    FgInventoryLotHistoryDto dto = new FgInventoryLotHistoryDto();
+                    dto.setLot(lot.getLotNo());
+                    dto.setQty(lot.getLotQty());
+                    dto.setTime(lot.getCreatedAt());
+                    dto.setOrder(lot.getWorkOrder().getWorkOrderNo());
+                    dto.setWorkerName(
+                            lot.getWorkOrder().getManager() != null
+                                    ? lot.getWorkOrder().getManager().getWorkerName()
+                                    : "-"
+                    );
+                    return dto;
+                })
+                .toList();
+
+        return new FgInventoryManagementDetailResponseDto(
+                product.getProductId().intValue(),
+                product.getProductCode(),
+                product.getProductName(),
+                totalQty,
+                histories
+        );
+    }
+
 }

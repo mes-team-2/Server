@@ -127,4 +127,14 @@ public class InventoryController {
     ) {
         return inventoryService.searchFg(keyword, startDate, endDate);
     }
+
+    // 완제품 상세 조회
+    @GetMapping("/fginventory/{productCode}")
+    public ResponseEntity<FgInventoryManagementDetailResponseDto> getDetail(
+            @PathVariable String productCode
+    ) {
+        return ResponseEntity.ok(
+                inventoryService.getFgDetail(productCode)
+        );
+    }
 }
