@@ -16,6 +16,7 @@ public class DefectLogTableDto {
 
     private String processCode;
     private String machineCode;
+    private String machineName;
 
     private String defectType;   // VOLTAGE
     private int defectQty;

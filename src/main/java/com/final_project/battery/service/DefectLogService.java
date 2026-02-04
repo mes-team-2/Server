@@ -53,6 +53,11 @@ public class DefectLogService {
                             )
 
                             // 설비
+                            .machineName(
+                                    pLog != null && pLog.getMachine() != null
+                                            ? pLog.getMachine().getMachineName()
+                                            : "-"
+                            )
                             .machineCode(
                                     pLog != null && pLog.getMachine() != null
                                             ? pLog.getMachine().getMachineCode()
