@@ -111,4 +111,20 @@ public class InventoryController {
         return ResponseEntity.ok(inventoryService.getDetail(id));
     }
 
+
+    // 완제품 재고
+    @GetMapping("/fginventory")
+    public List<FgInventoryManagementResponseDto> search(
+            @RequestParam(required = false) String keyword,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate
+    ) {
+        return inventoryService.searchFg(keyword, startDate, endDate);
+    }
 }

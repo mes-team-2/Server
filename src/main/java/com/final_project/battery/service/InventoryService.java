@@ -446,4 +446,13 @@ public class InventoryService {
                 lastChanged
         );
     }
+
+    // 완제품 재고 조회
+    public List<FgInventoryManagementResponseDto> searchFg(
+            String keyword,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+        return fgInventoryRepository.searchFgInventory(keyword, startDate, endDate);
+    }
 }
