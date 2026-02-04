@@ -15,7 +15,10 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.time.LocalDateTime.now;
 
@@ -69,11 +72,11 @@ public class DataInitializer implements CommandLineRunner {
         createWorker("W-260203-0010", "한소희", "1234", Role.OPERATOR, true);
 
         // 2. 공정 및 설비
-        ProcessStep s1 = createStep("PROC-10", "전극공정(Electrode)", 10);
-        ProcessStep s2 = createStep("PROC-20", "조립공정(Assembly)", 20);
-        ProcessStep s3 = createStep("PROC-30", "활성화공정(Formation)", 30);
-        ProcessStep s4 = createStep("PROC-40", "팩공정(Pack)", 40);
-        ProcessStep s5 = createStep("PROC-50", "검사공정(Inspection)", 50);
+        ProcessStep s1 = createStep("PROC-010", "전극공정(Electrode)", 10);
+        ProcessStep s2 = createStep("PROC-020", "조립공정(Assembly)", 20);
+        ProcessStep s3 = createStep("PROC-030", "활성화공정(Formation)", 30);
+        ProcessStep s4 = createStep("PROC-040", "팩공정(Pack)", 40);
+        ProcessStep s5 = createStep("PROC-050", "검사공정(Inspection)", 50);
 
         Machine mA01 = createMachine("MAC-A-01", "Electrode M/C #1", s1);
         Machine mA02 = createMachine("MAC-A-02", "Assembly Line #1", s2);
@@ -160,7 +163,7 @@ public class DataInitializer implements CommandLineRunner {
         Lot historyLot = createHistoryWorkOrder(pSmall, 100, WorkOrderStatus.DONE, 7);
         createDummyQualityLogs(historyLot, mA05, 100, w4);
 
-        createRunningWorkOrder(pMedium, 1000); // 목표 수량 1000개
+        createRunningWorkOrder(pMedium, 50);
         createPlannedWorkOrder(pLarge, 500, 1);
 
         // 5. [핵심] 대시보드용 금일(Today) 데이터 생성
@@ -188,6 +191,9 @@ public class DataInitializer implements CommandLineRunner {
             runningLot = lotRepository.findFirstByWorkOrder(runningOrder).orElse(null);
         }
 
+        Map<String, ProcessStep> stepMap = processStepRepository.findAll().stream()
+                .collect(Collectors.toMap(ProcessStep::getStepCode, Function.identity()));
+
         // 09:00부터 현재 시간까지 매 시간마다 로그 생성
         LocalDateTime current = startOfToday;
         while (current.isBefore(now)) {
@@ -208,6 +214,13 @@ public class DataInitializer implements CommandLineRunner {
                     pl.setWorker(worker);
                     pl.setWorkOrder(runningOrder);
                     pl.setLot(runningLot);
+
+                    // [핵심 수정] 설비의 공정 코드에 맞는 공정 객체(ProcessStep)를 넣어줍니다.
+                    // 이게 들어가야 DashboardService에서 'PROC-50'을 찾아 양품으로 집계합니다.
+                    if (stepMap.containsKey(m.getProcessCode())) {
+                        pl.setProcessStep(stepMap.get(m.getProcessCode()));
+                    }
+
                     pl.setStartedAt(current);
                     pl.setEndedAt(current.plusMinutes(50)); // 50분 가동
 
@@ -238,7 +251,7 @@ public class DataInitializer implements CommandLineRunner {
             current = current.plusHours(1);
         }
 
-        // **중요** 현재 시점의 최신 센서값 하나 더 추가 (대시보드 실시간 현황용)
+        // 현재 시점의 최신 센서값 하나 더 추가 (대시보드 실시간 현황용)
         for (Machine m : machines) {
             sensorLogRepository.save(SensorLog.builder()
                     .machine(m)
