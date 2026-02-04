@@ -4,6 +4,7 @@ import com.final_project.battery.domain.*;
 import com.final_project.battery.domain.common.*;
 import com.final_project.battery.dto.request.ProductionLogRequestDto;
 import com.final_project.battery.dto.request.SensorLogRequestDto;
+import com.final_project.battery.dto.response.ProcessLogResponseDto;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,10 +12,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,6 +37,81 @@ public class LogService {
     private final ProcessStepRepository processStepRepository;
     private final QualityTestRepository qualityTestRepository;
     private final MachineStatusLogRepository machineStatusLogRepository;
+
+    // 공정 이력 검색 서비스
+    @Transactional(readOnly = true)
+    public List<ProcessLogResponseDto> searchProcessLogs(String startDate, String endDate, String keyword) {
+        LocalDateTime start = (startDate != null && !startDate.isEmpty())
+                ? LocalDate.parse(startDate).atStartOfDay() : null;
+        LocalDateTime end = (endDate != null && !endDate.isEmpty())
+                ? LocalDate.parse(endDate).atTime(23, 59, 59) : null;
+
+        // 1. DB에서 조건에 맞는 모든 로그 조회 (중복 포함)
+        List<ProcessLog> rawLogs = processLogRepository.search(start, end, keyword);
+
+        // 2. [핵심] LOT ID + 공정 ID 기준으로 그룹핑
+        Map<String, List<ProcessLog>> groupedLogs = rawLogs.stream()
+                .collect(Collectors.groupingBy(log ->
+                        log.getLot().getLotId() + "_" + log.getProcessStep().getProcessStepId()
+                ));
+
+        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
+        // 3. 그룹별 데이터 집계 및 DTO 변환
+        return groupedLogs.values().stream().map(group -> {
+                    // 대표 로그 (가장 최근 것 사용)
+                    ProcessLog representative = group.get(0);
+
+                    // 시간 범위 계산 (최초 시작 ~ 최종 종료)
+                    LocalDateTime startTime = group.stream()
+                            .map(ProcessLog::getStartTime).filter(Objects::nonNull)
+                            .min(LocalDateTime::compareTo).orElse(null);
+                    LocalDateTime endTime = group.stream()
+                            .map(ProcessLog::getEndTime).filter(Objects::nonNull)
+                            .max(LocalDateTime::compareTo).orElse(null);
+
+                    // 해당 LOT + 공정의 모든 생산 실적 조회 (58개 등 N개 레코드)
+                    List<ProductionLog> prodList = productionLogRepository.findByLotAndProcessStep(
+                            representative.getLot(), representative.getProcessStep());
+
+                    // 수량 및 센서값 집계
+                    int totalGood = 0;
+                    int totalBad = 0;
+                    double avgTemp = 0.0;
+                    double avgHumid = 0.0;
+                    double avgVolt = 0.0;
+
+                    if (!prodList.isEmpty()) {
+                        totalGood = prodList.stream().mapToInt(p -> p.getGoodQty() != null ? p.getGoodQty() : 0).sum();
+                        totalBad = prodList.stream().mapToInt(p -> p.getBadQty() != null ? p.getBadQty() : 0).sum();
+
+                        avgTemp = prodList.stream().mapToDouble(p -> p.getTemperature() != null ? p.getTemperature() : 0).average().orElse(0.0);
+                        avgHumid = prodList.stream().mapToDouble(p -> p.getHumidity() != null ? p.getHumidity() : 0).average().orElse(0.0);
+                        avgVolt = prodList.stream().mapToDouble(p -> p.getVoltage() != null ? p.getVoltage() : 0).average().orElse(0.0);
+                    }
+
+                    return ProcessLogResponseDto.builder()
+                            .id(representative.getProcessLogId())
+                            .lotNo(representative.getLot().getLotNo())
+                            .processStep(representative.getProcessStep().getStepName())
+                            .machineName(representative.getMachine().getMachineName())
+                            .workerName(representative.getWorker() != null ? representative.getWorker().getWorkerName() : "-")
+                            .status(representative.getStatus().name()) // 최신 상태 기준
+                            .startTime(startTime != null ? startTime.format(fmt) : "-")
+                            .endTime(endTime != null ? endTime.format(fmt) : "-")
+                            // [집계된 데이터]
+                            .goodQty(totalGood)
+                            .badQty(totalBad)
+                            .temperature(Math.round(avgTemp * 10) / 10.0)
+                            .humidity(Math.round(avgHumid * 10) / 10.0)
+                            .voltage(Math.round(avgVolt * 10) / 10.0)
+                            .build();
+
+                })
+                // 시작 시간 내림차순 정렬 (최신순)
+                .sorted(Comparator.comparing(ProcessLogResponseDto::getStartTime).reversed())
+                .collect(Collectors.toList());
+    }
 
     // 1. 센서 로그 저장
     @Transactional
