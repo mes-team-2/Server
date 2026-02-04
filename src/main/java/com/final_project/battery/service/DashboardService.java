@@ -26,16 +26,28 @@ public class DashboardService {
     private final WorkerRepository workerRepository;
     private final WorkOrderRepository workOrderRepository;
 
+    private static final String FINAL_PROCESS_CODE = "PROC-050";
+
     @Transactional(readOnly = true)
     public DashboardDto getDashboardData() {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().atTime(LocalTime.MAX);
 
-        // 1. [상단 요약] 오늘 생산 실적 집계 (DB 기반)
+        // 1. [상단 요약] 오늘 생산 실적 집계
         List<ProductionLog> pLogs = productionLogRepository.findByStartedAtBetween(startOfDay, endOfDay);
 
-        int totalActual = pLogs.stream().mapToInt(log -> log.getGoodQty() != null ? log.getGoodQty() : 0).sum();
-        int totalDefect = pLogs.stream().mapToInt(log -> log.getBadQty() != null ? log.getBadQty() : 0).sum();
+        // [수정] 양품 수량(Total Actual)은 '최종 공정(PROC-50)'의 실적만 합산
+        int totalActual = pLogs.stream()
+                .filter(log -> log.getProcessStep() != null && FINAL_PROCESS_CODE.equals(log.getProcessStep().getStepCode()))
+                .mapToInt(log -> log.getGoodQty() != null ? log.getGoodQty() : 0)
+                .sum();
+
+        // 불량 수량(Total Defect)은 '모든 공정'의 불량을 합산 (전체 손실 파악용)
+        int totalDefect = pLogs.stream()
+                .filter(log -> log.getProcessStep() != null && FINAL_PROCESS_CODE.equals(log.getProcessStep().getStepCode()))
+                .mapToInt(log -> log.getBadQty() != null ? log.getBadQty() : 0)
+                .sum();
+
         int totalProduction = totalActual + totalDefect;
 
         // 계획 수량 (진행 중인 작업지시)
@@ -46,8 +58,9 @@ public class DashboardService {
         if (totalPlanned == 0) totalPlanned = 1000;
 
         double achievementRate = (double) totalActual / totalPlanned * 100;
-        double actualRate = totalProduction == 0 ? 0 : (double) totalActual / totalProduction * 100;
-        double defectRate = totalProduction == 0 ? 0 : (double) totalDefect / totalProduction * 100;
+        // 양품률 = (최종양품 / (최종양품 + 전체불량)) - 엄격하게 계산
+        double actualRate = totalProduction == 0 ? 0 : (double) totalActual / (totalActual + totalDefect) * 100;
+        double defectRate = totalProduction == 0 ? 0 : (double) totalDefect / (totalActual + totalDefect) * 100;
 
         DashboardDto.SummaryDto summary = DashboardDto.SummaryDto.builder()
                 .achievementRate(round(achievementRate))
@@ -70,10 +83,19 @@ public class DashboardService {
 
             if (groupedByHour.containsKey(i)) {
                 List<ProductionLog> hourLogs = groupedByHour.get(i);
-                hourActual = hourLogs.stream().mapToInt(l -> l.getGoodQty() != null ? l.getGoodQty() : 0).sum();
-                hourDefect = hourLogs.stream().mapToInt(l -> l.getBadQty() != null ? l.getBadQty() : 0).sum();
+
+                // [수정] 차트에서도 양품은 최종 공정 것만 표시
+                hourActual = hourLogs.stream()
+                        .filter(l -> l.getProcessStep() != null && FINAL_PROCESS_CODE.equals(l.getProcessStep().getStepCode()))
+                        .mapToInt(l -> l.getGoodQty() != null ? l.getGoodQty() : 0)
+                        .sum();
+
+                // 불량은 해당 시간대 전체 공정 불량 표시
+                hourDefect = hourLogs.stream()
+                        .filter(l -> l.getProcessStep() != null && FINAL_PROCESS_CODE.equals(l.getProcessStep().getStepCode()))
+                        .mapToInt(l -> l.getBadQty() != null ? l.getBadQty() : 0)
+                        .sum();
             }
-            // *랜덤 생성 로직 제거*: DataInitializer가 만든 데이터만 신뢰함
 
             int hourTotal = hourActual + hourDefect;
             double hourDefectRate = hourTotal == 0 ? 0 : (double) hourDefect / hourTotal * 100;
@@ -113,7 +135,6 @@ public class DashboardService {
                     .machineCode(m.getMachineCode())
                     .machineName(m.getMachineName())
                     .status(m.getStatus().name())
-                    // 센서가 없으면 0.0 처리
                     .temperature(sensor != null ? round(sensor.getTemperature()) : 0.0)
                     .humidity(sensor != null ? round(sensor.getHumidity()) : 0.0)
                     .voltage(sensor != null ? round(sensor.getVoltage()) : 0.0)
@@ -133,14 +154,9 @@ public class DashboardService {
                 .build();
 
         // 6. [OEE] 공정 효율
-        // 가동률(Availability): 설비 상태가 RUN인 비율 (간단 추정)
         long runningMachines = machines.stream().filter(m -> "RUN".equals(m.getStatus().name())).count();
         double availability = machines.isEmpty() ? 0 : (double) runningMachines / machines.size() * 100;
-
-        // 성능(Performance): 계획 수량 대비 실적
-        double performance = totalPlanned > 0 ? (double) totalProduction / totalPlanned * 100 : 0.0;
-
-        // OEE 계산
+        double performance = totalPlanned > 0 ? (double) totalActual / totalPlanned * 100 : 0.0; // 성능도 최종 양품 기준
         double oee = (availability * performance * (actualRate == 0 ? 100 : actualRate)) / 10000;
 
         DashboardDto.ProcessEffDto processEff = DashboardDto.ProcessEffDto.builder()
@@ -148,7 +164,7 @@ public class DashboardService {
                 .performance(round(performance))
                 .defectRate(round(defectRate))
                 .oee(round(oee))
-                .materialUsage(round(45.0 + new Random().nextInt(5))) // 자재 소모율은 약간의 변동성 부여
+                .materialUsage(round(45.0 + new Random().nextInt(5)))
                 .build();
 
         return DashboardDto.builder()
