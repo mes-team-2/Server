@@ -20,6 +20,7 @@ public class ProductResponseDto {
     private String type;
     private Boolean active;
     private String updatedAt;
+    private String createdAt;
 
     public ProductResponseDto(Product p) {
         this.productId = p.getProductId();
@@ -31,10 +32,19 @@ public class ProductResponseDto {
         this.type = "완제품";
         this.active = true;
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+
         if (p.getUpdatedAt() != null) {
-            this.updatedAt = p.getUpdatedAt().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            this.updatedAt = p.getUpdatedAt().format(formatter);
         } else {
             this.updatedAt = "-";
+        }
+
+        // 등록일 매핑 추가
+        if (p.getCreatedAt() != null) {
+            this.createdAt = p.getCreatedAt().format(formatter);
+        } else {
+            this.createdAt = "-";
         }
     }
 }
