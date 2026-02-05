@@ -1,5 +1,6 @@
 package com.final_project.battery.controller;
 
+import com.final_project.battery.domain.common.DefectType;
 import com.final_project.battery.dto.request.ProductionLogRequestDto;
 import com.final_project.battery.dto.request.SensorLogRequestDto;
 import com.final_project.battery.dto.response.ProcessLogResponseDto;
@@ -66,9 +67,9 @@ public class LogController {
     // 검사 이력 조회
     @GetMapping("/testlog")
     public ResponseEntity<?> searchTestLogs(
-            @RequestParam(required = false) Boolean isOk,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String defectType,
+            @RequestParam(required = false) DefectType defectType,
+            @RequestParam(required = false) Boolean isOk,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
@@ -91,7 +92,7 @@ public class LogController {
                         endDate,
                         pageable
                 );
-
+        log.info("defectType : {}]", defectType);
         return ResponseEntity.ok(result);
     }
 
@@ -99,7 +100,7 @@ public class LogController {
     public ResponseEntity<TestLogDashboardResponseDto> getDashboard(
             @RequestParam(required = false) Boolean isOk,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String defectType,
+            @RequestParam(required = false) DefectType defectType,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,

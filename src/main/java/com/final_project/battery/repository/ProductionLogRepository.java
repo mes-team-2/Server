@@ -3,6 +3,7 @@ package com.final_project.battery.repository;
 import com.final_project.battery.domain.Lot;
 import com.final_project.battery.domain.ProcessStep;
 import com.final_project.battery.domain.ProductionLog;
+import com.final_project.battery.domain.common.DefectType;
 import com.final_project.battery.dto.response.TestLogResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -51,18 +52,18 @@ public interface ProductionLogRepository extends JpaRepository<ProductionLog, Lo
             )
         and (
             :keyword is null or
-            lower(l.lotNo) like lower(concat('%', :keyword, '%')) or
-            lower(w.workOrderNo) like lower(concat('%', :keyword, '%')) or
-            lower(pr.productName) like lower(concat('%', :keyword, '%')) or
-            lower(m.machineName) like lower(concat('%', :keyword, '%')) or
-            lower(wk.workerCode) like lower(concat('%', :keyword, '%'))
+            l.lotNo like concat('%', :keyword, '%') or
+            w.workOrderNo like concat('%', :keyword, '%') or
+            pr.productName like concat('%', :keyword, '%') or
+            m.machineName like concat('%', :keyword, '%') or
+            wk.workerCode like concat('%', :keyword, '%')
         )
         and (:startDate is null or p.endedAt >= :startDate)
         and (:endDate is null or p.endedAt <= :endDate)
         and (:defectType is null or d.defectType = :defectType)
         """,
             countQuery = """
-        select count(p)
+        select count(distinct p)
         from ProductionLog p
         join p.lot l
         join l.product pr
@@ -77,12 +78,12 @@ public interface ProductionLogRepository extends JpaRepository<ProductionLog, Lo
                 (:isOk = false and p.badQty > 0)
             )
         and (
-            :keyword is null or
-            lower(l.lotNo) like lower(concat('%', :keyword, '%')) or
-            lower(w.workOrderNo) like lower(concat('%', :keyword, '%')) or
-            lower(pr.productName) like lower(concat('%', :keyword, '%')) or
-            lower(m.machineName) like lower(concat('%', :keyword, '%')) or
-            lower(wk.workerCode) like lower(concat('%', :keyword, '%'))
+             :keyword is null or
+            l.lotNo like concat('%', :keyword, '%') or
+            w.workOrderNo like concat('%', :keyword, '%') or
+            pr.productName like concat('%', :keyword, '%') or
+            m.machineName like concat('%', :keyword, '%') or
+            wk.workerCode like concat('%', :keyword, '%')
         )
         and (:startDate is null or p.endedAt >= :startDate)
         and (:endDate is null or p.endedAt <= :endDate)
@@ -92,7 +93,7 @@ public interface ProductionLogRepository extends JpaRepository<ProductionLog, Lo
     Page<TestLogResponseDto> searchTestLogs(
             @Param("isOk") Boolean isOk,
             @Param("keyword") String keyword,
-            @Param("defectType") String defectType,
+            @Param("defectType") DefectType defectType,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable
@@ -118,11 +119,11 @@ where
     )
 and (
     :keyword is null or
-    lower(l.lotNo) like lower(concat('%', :keyword, '%')) or
-    lower(w.workOrderNo) like lower(concat('%', :keyword, '%')) or
-    lower(pr.productName) like lower(concat('%', :keyword, '%')) or
-    lower(m.machineName) like lower(concat('%', :keyword, '%')) or
-    lower(wk.workerCode) like lower(concat('%', :keyword, '%'))
+            l.lotNo like concat('%', :keyword, '%') or
+            w.workOrderNo like concat('%', :keyword, '%') or
+            pr.productName like concat('%', :keyword, '%') or
+            m.machineName like concat('%', :keyword, '%') or
+            wk.workerCode like concat('%', :keyword, '%')
 )
 and (:startDate is null or p.endedAt >= :startDate)
 and (:endDate is null or p.endedAt <= :endDate)
@@ -131,7 +132,7 @@ and (:defectType is null or d.defectType = :defectType)
     List<Object[]> getCardSummary(
             @Param("isOk") Boolean isOk,
             @Param("keyword") String keyword,
-            @Param("defectType") String defectType,
+            @Param("defectType") DefectType defectType,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
@@ -158,11 +159,11 @@ where
     )
 and (
     :keyword is null or
-    lower(l.lotNo) like lower(concat('%', :keyword, '%')) or
-    lower(w.workOrderNo) like lower(concat('%', :keyword, '%')) or
-    lower(pr.productName) like lower(concat('%', :keyword, '%')) or
-    lower(m.machineName) like lower(concat('%', :keyword, '%')) or
-    lower(wk.workerCode) like lower(concat('%', :keyword, '%'))
+            l.lotNo like concat('%', :keyword, '%') or
+            w.workOrderNo like concat('%', :keyword, '%') or
+            pr.productName like concat('%', :keyword, '%') or
+            m.machineName like concat('%', :keyword, '%') or
+            wk.workerCode like concat('%', :keyword, '%')
 )
 and (:startDate is null or p.endedAt >= :startDate)
 and (:endDate is null or p.endedAt <= :endDate)
@@ -174,7 +175,7 @@ order by function('date_format', p.endedAt, '%Y-%m-%d')
     List<Object[]> getDailySummary(
             @Param("isOk") Boolean isOk,
             @Param("keyword") String keyword,
-            @Param("defectType") String defectType,
+            @Param("defectType") DefectType defectType,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );
@@ -200,12 +201,12 @@ where
         (:isOk = false and p.badQty > 0)
     )
 and (
-    :keyword is null or
-    lower(l.lotNo) like lower(concat('%', :keyword, '%')) or
-    lower(w.workOrderNo) like lower(concat('%', :keyword, '%')) or
-    lower(pr.productName) like lower(concat('%', :keyword, '%')) or
-    lower(m.machineName) like lower(concat('%', :keyword, '%')) or
-    lower(wk.workerCode) like lower(concat('%', :keyword, '%'))
+     :keyword is null or
+           l.lotNo like concat('%', :keyword, '%') or
+            w.workOrderNo like concat('%', :keyword, '%') or
+            pr.productName like concat('%', :keyword, '%') or
+            m.machineName like concat('%', :keyword, '%') or
+            wk.workerCode like concat('%', :keyword, '%')
 )
 and (:startDate is null or p.endedAt >= :startDate)
 and (:endDate is null or p.endedAt <= :endDate)
@@ -217,7 +218,7 @@ order by count(d) desc
     List<Object[]> getDefectSummary(
             @Param("isOk") Boolean isOk,
             @Param("keyword") String keyword,
-            @Param("defectType") String defectType,
+            @Param("defectType") DefectType defectType,
             @Param("startDate") LocalDateTime startDate,
             @Param("endDate") LocalDateTime endDate
     );

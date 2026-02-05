@@ -290,7 +290,7 @@ public class LogService {
     public Page<TestLogResponseDto> searchTestLogs(
             Boolean isOk,
             String keyword,
-            String defectType,
+            DefectType defectType,
             LocalDateTime startDate,
             LocalDateTime endDate,
             Pageable pageable
@@ -309,7 +309,7 @@ public class LogService {
     public TestLogDashboardResponseDto getDashboard(
             Boolean isOk,
             String keyword,
-            String defectType,
+            DefectType defectType,
             LocalDateTime startDate,
             LocalDateTime endDate
     ) {
