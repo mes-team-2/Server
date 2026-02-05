@@ -4,6 +4,7 @@ import com.final_project.battery.domain.Lot;
 import com.final_project.battery.domain.ProcessStep;
 import com.final_project.battery.domain.ProductionLog;
 import com.final_project.battery.domain.common.DefectType;
+import com.final_project.battery.dto.response.ProductReportResponse;
 import com.final_project.battery.dto.response.TestLogResponseDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -225,11 +226,67 @@ order by count(d) desc
 
 
 
-
-
-
-
-
-
     List<ProductionLog> findByLot(Lot lot);
+
+    @Query(
+            value = """
+            SELECT 
+                DATE(pl.started_at) AS date,
+                p.product_name,
+                SUM(wo.planned_qty) AS plan_qty,
+                SUM(pl.good_qty + pl.bad_qty) AS total_attempt_qty,
+                SUM(pl.good_qty) AS good_qty,
+                SUM(pl.bad_qty) AS bad_qty,
+                CASE 
+                    WHEN SUM(pl.good_qty + pl.bad_qty) = 0 THEN 0
+                    ELSE SUM(pl.good_qty) * 100.0 / SUM(pl.good_qty + pl.bad_qty)
+                END AS yield_rate,
+                CASE 
+                    WHEN SUM(pl.good_qty + pl.bad_qty) = 0 THEN 0
+                    ELSE SUM(pl.bad_qty) * 100.0 / SUM(pl.good_qty + pl.bad_qty)
+                END AS defect_rate
+            FROM production_log pl
+            JOIN work_order wo ON pl.work_order_id = wo.work_order_id
+            JOIN product p ON wo.product_id = p.product_id
+            WHERE (:start IS NULL OR pl.started_at >= :start)
+              AND (:end IS NULL OR pl.started_at <= :end)
+              AND (:productName IS NULL OR p.product_name LIKE CONCAT('%', :productName, '%'))
+            GROUP BY DATE(pl.started_at), p.product_name
+        """,
+            countQuery = """
+            SELECT COUNT(*) FROM (
+                SELECT 1
+                FROM production_log pl
+                JOIN work_order wo ON pl.work_order_id = wo.work_order_id
+                JOIN product p ON wo.product_id = p.product_id
+                WHERE (:start IS NULL OR pl.started_at >= :start)
+                  AND (:end IS NULL OR pl.started_at <= :end)
+                  AND (:productName IS NULL OR p.product_name LIKE CONCAT('%', :productName, '%'))
+                GROUP BY DATE(pl.started_at), p.product_name
+            ) t
+        """,
+            nativeQuery = true
+    )
+    Page<Object[]> getProductReportRaw(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            @Param("productName") String productName,
+            Pageable pageable
+    );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

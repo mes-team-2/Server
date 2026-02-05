@@ -5,6 +5,7 @@ import com.final_project.battery.domain.common.*;
 import com.final_project.battery.dto.request.ProductionLogRequestDto;
 import com.final_project.battery.dto.request.SensorLogRequestDto;
 import com.final_project.battery.dto.response.ProcessLogResponseDto;
+import com.final_project.battery.dto.response.ProductReportResponse;
 import com.final_project.battery.dto.response.TestLogDashboardResponseDto;
 import com.final_project.battery.dto.response.TestLogResponseDto;
 import com.final_project.battery.repository.*;
@@ -394,4 +395,27 @@ public class LogService {
         );
     }
 
+
+
+    public Page<ProductReportResponse> getProductReport(
+            LocalDateTime start,
+            LocalDateTime end,
+            String productName,
+            Pageable pageable
+    ) {
+
+        Page<Object[]> rawPage =
+                productionLogRepository.getProductReportRaw(start, end, productName, pageable);
+
+        return rawPage.map(row -> new ProductReportResponse(
+                ((java.sql.Date) row[0]).toLocalDate(), // date
+                (String) row[1],                        // productName
+                ((Number) row[2]).longValue(),          // planQty
+                ((Number) row[3]).longValue(),          // totalAttemptQty
+                ((Number) row[4]).longValue(),          // goodQty
+                ((Number) row[5]).longValue(),          // badQty
+                ((Number) row[6]).doubleValue(),        // yieldRate
+                ((Number) row[7]).doubleValue()         // defectRate
+        ));
+    }
 }
