@@ -3,6 +3,7 @@ package com.final_project.battery.controller;
 import com.final_project.battery.dto.request.ProductionLogRequestDto;
 import com.final_project.battery.dto.request.SensorLogRequestDto;
 import com.final_project.battery.dto.response.ProcessLogResponseDto;
+import com.final_project.battery.dto.response.TestLogDashboardResponseDto;
 import com.final_project.battery.dto.response.TestLogResponseDto;
 import com.final_project.battery.service.LogService;
 import lombok.RequiredArgsConstructor;
@@ -67,6 +68,7 @@ public class LogController {
     public ResponseEntity<?> searchTestLogs(
             @RequestParam(required = false) Boolean isOk,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String defectType,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startDate,
@@ -84,10 +86,30 @@ public class LogController {
                 logService.searchTestLogs(
                         isOk,
                         keyword,
+                        defectType,
                         startDate,
                         endDate,
                         pageable
                 );
+
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/testlog/dashboard")
+    public ResponseEntity<TestLogDashboardResponseDto> getDashboard(
+            @RequestParam(required = false) Boolean isOk,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String defectType,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate
+    ) {
+
+        TestLogDashboardResponseDto result =
+                logService.getDashboard(isOk, keyword, defectType, startDate, endDate);
 
         return ResponseEntity.ok(result);
     }
