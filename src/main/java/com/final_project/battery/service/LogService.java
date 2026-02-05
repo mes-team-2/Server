@@ -5,9 +5,13 @@ import com.final_project.battery.domain.common.*;
 import com.final_project.battery.dto.request.ProductionLogRequestDto;
 import com.final_project.battery.dto.request.SensorLogRequestDto;
 import com.final_project.battery.dto.response.ProcessLogResponseDto;
+import com.final_project.battery.dto.response.TestLogDashboardResponseDto;
+import com.final_project.battery.dto.response.TestLogResponseDto;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -281,4 +285,113 @@ public class LogService {
         defect.setCreatedAt(LocalDateTime.now());
         defectLogRepository.save(defect);
     }
+
+    // 검사 이력 조회
+    public Page<TestLogResponseDto> searchTestLogs(
+            Boolean isOk,
+            String keyword,
+            String defectType,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Pageable pageable
+    ) {
+        return productionLogRepository.searchTestLogs(
+                isOk,
+                keyword,
+                defectType,
+                startDate,
+                endDate,
+                pageable
+        );
+    }
+
+    // 검사이력 집계 조합
+    public TestLogDashboardResponseDto getDashboard(
+            Boolean isOk,
+            String keyword,
+            String defectType,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    ) {
+
+        /* =========================
+           1. 카드 집계
+        ========================= */
+        List<Object[]> cardList = productionLogRepository.getCardSummary(
+                isOk, keyword, defectType, startDate, endDate
+        );
+
+        Object[] card = cardList.isEmpty() ? null : cardList.get(0);
+
+        Long totalCount = card != null && card[0] != null
+                ? ((Number) card[0]).longValue()
+                : 0L;
+
+        Long okCount = card != null && card[1] != null
+                ? ((Number) card[1]).longValue()
+                : 0L;
+
+        Long ngCount = card != null && card[2] != null
+                ? ((Number) card[2]).longValue()
+                : 0L;
+
+        int okRate = totalCount == 0
+                ? 0
+                : (int) ((okCount * 100) / totalCount);
+
+        String topDefectType = "-";
+
+
+        /* =========================
+           2. 일자별 OK / NG
+        ========================= */
+        List<Object[]> dailyRaw = productionLogRepository.getDailySummary(
+                isOk, keyword, defectType, startDate, endDate
+        );
+
+        List<TestLogDashboardResponseDto.Daily> daily =
+                dailyRaw.stream()
+                        .map(r -> new TestLogDashboardResponseDto.Daily(
+                                (String) r[0],                     // day
+                                r[1] != null ? ((Number) r[1]).longValue() : 0L,
+                                r[2] != null ? ((Number) r[2]).longValue() : 0L // ng
+                        ))
+                        .collect(Collectors.toList());
+
+
+        /* =========================
+           3. 불량 유형 집계
+        ========================= */
+        List<Object[]> defectRaw = productionLogRepository.getDefectSummary(
+                isOk, keyword, defectType, startDate, endDate
+        );
+
+        List<TestLogDashboardResponseDto.Defect> defects =
+                defectRaw.stream()
+                        .map(r -> new TestLogDashboardResponseDto.Defect(
+                                r[0] != null ? r[0].toString() : "UNKNOWN",
+                                r[1] != null ? ((Number) r[1]).longValue() : 0L
+                        ))
+                        .collect(Collectors.toList());
+
+        // 최다 불량 추출
+        if (!defects.isEmpty()) {
+            topDefectType = defects.get(0).getDefectType();
+        }
+
+
+        /* =========================
+           4. DTO 조립
+        ========================= */
+        return new TestLogDashboardResponseDto(
+                totalCount,
+                okCount,
+                ngCount,
+                okRate,
+                topDefectType,
+                daily,
+                defects
+        );
+    }
+
 }
