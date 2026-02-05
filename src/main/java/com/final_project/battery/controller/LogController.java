@@ -3,12 +3,19 @@ package com.final_project.battery.controller;
 import com.final_project.battery.dto.request.ProductionLogRequestDto;
 import com.final_project.battery.dto.request.SensorLogRequestDto;
 import com.final_project.battery.dto.response.ProcessLogResponseDto;
+import com.final_project.battery.dto.response.TestLogResponseDto;
 import com.final_project.battery.service.LogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -54,4 +61,34 @@ public class LogController {
         return ResponseEntity.ok("상태 변경 저장 완료");
     }
 
+
+    // 검사 이력 조회
+    @GetMapping("/testlog")
+    public ResponseEntity<?> searchTestLogs(
+            @RequestParam(required = false) Boolean isOk,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startDate,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+
+        Pageable pageable =
+                PageRequest.of(page, size, Sort.by("endedAt").descending());
+
+        Page<TestLogResponseDto> result =
+                logService.searchTestLogs(
+                        isOk,
+                        keyword,
+                        startDate,
+                        endDate,
+                        pageable
+                );
+
+        return ResponseEntity.ok(result);
+    }
 }

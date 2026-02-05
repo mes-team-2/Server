@@ -5,9 +5,12 @@ import com.final_project.battery.domain.common.*;
 import com.final_project.battery.dto.request.ProductionLogRequestDto;
 import com.final_project.battery.dto.request.SensorLogRequestDto;
 import com.final_project.battery.dto.response.ProcessLogResponseDto;
+import com.final_project.battery.dto.response.TestLogResponseDto;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -280,5 +283,22 @@ public class LogService {
         defect.setVoltage(dto.getVoltage());
         defect.setCreatedAt(LocalDateTime.now());
         defectLogRepository.save(defect);
+    }
+
+    // 검사 이력 조회
+    public Page<TestLogResponseDto> searchTestLogs(
+            Boolean isOk,
+            String keyword,
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Pageable pageable
+    ) {
+        return productionLogRepository.searchTestLogs(
+                isOk,
+                keyword,
+                startDate,
+                endDate,
+                pageable
+        );
     }
 }
