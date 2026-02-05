@@ -59,7 +59,7 @@ public class DataInitializer implements CommandLineRunner {
         // 1. 작업자 생성
         Worker w1 = createWorker("W-260203-0001", "우민규", "1234", Role.ADMIN, true);
         Worker tester = createWorker("test", "테스터", "1234", Role.ADMIN, true);
-        Worker w2 = createWorker("W-260203-0002", "김현수", "1234", Role.OPERATOR, true);
+        Worker w2 = createWorker("W-260203-0002", "이현수", "1234", Role.OPERATOR, true);
         Worker w3 = createWorker("W-260203-0003", "양찬종", "1234", Role.OPERATOR, true);
         Worker w4 = createWorker("W-260203-0004", "김하린", "1234", Role.OPERATOR, true);
 
@@ -160,11 +160,10 @@ public class DataInitializer implements CommandLineRunner {
         createBom(pLarge, mLabel, 1.0, 0.0, "팩공정");
 
         // 4. 작업지시 & LOT
-        Lot historyLot = createHistoryWorkOrder(pSmall, 100, WorkOrderStatus.DONE, 7);
-        createDummyQualityLogs(historyLot, mA05, 100, w4);
+//        Lot historyLot = createHistoryWorkOrder(pSmall, 100, WorkOrderStatus.DONE, 7);
+//        createDummyQualityLogs(historyLot, mA05, 100, w4);
 
-        createRunningWorkOrder(pMedium, 50);
-        createPlannedWorkOrder(pLarge, 500, 1);
+//        createRunningWorkOrder(pMedium, 50);
 
         // 5. [핵심] 대시보드용 금일(Today) 데이터 생성
         createDashboardDummyData(Arrays.asList(mA01, mA02, mA03, mA04, mA05), w2);
@@ -355,7 +354,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private void createRunningWorkOrder(Product p, int qty) {
         String today = now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        String woNo = "WO-" + today + "-002";
+        String woNo = "WO-" + today + "-001";
         WorkOrder wo = new WorkOrder();
         wo.setWorkOrderNo(woNo); wo.setProduct(p); wo.setPlannedQty(qty); wo.setStartedAt(now().minusHours(2)); wo.setDueDate(now().plusDays(2)); wo.setEndedAt(now().minusHours(1)); wo.setStatus(WorkOrderStatus.IN_PROGRESS); wo.setCreatedAt(now());
         workOrderRepository.save(wo);

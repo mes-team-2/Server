@@ -13,4 +13,6 @@ public interface ProductionLogRepository extends JpaRepository<ProductionLog, Lo
     List<ProductionLog> findByStartedAtBetween(LocalDateTime start, LocalDateTime end);
 
     List<ProductionLog> findByLotAndProcessStep(Lot lot, ProcessStep processStep);
+
+    List<ProductionLog> findByLot(Lot lot);
 }
