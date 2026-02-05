@@ -229,4 +229,6 @@ order by count(d) desc
 
 
 
+
+    List<ProductionLog> findByLot(Lot lot);
 }
