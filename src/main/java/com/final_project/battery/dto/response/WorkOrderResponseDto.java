@@ -20,6 +20,7 @@ public class WorkOrderResponseDto {
     private String startDate;   // 시작 시간 (yyyy-MM-dd HH:mm)
     private String endDate;     // 종료 시간 (yyyy-MM-dd HH:mm)
     private String dueDate;     // 납기일 (yyyy-MM-dd)
+    private String createdAt;
 
     // Entity -> DTO
     public WorkOrderResponseDto(WorkOrder wo) {
@@ -34,6 +35,8 @@ public class WorkOrderResponseDto {
         this.startDate = wo.getStartedAt() != null ? wo.getStartedAt().format(datetimeFmt) : "-";
         this.endDate = wo.getEndedAt() != null ? wo.getEndedAt().format(datetimeFmt) : "-";
         this.dueDate = wo.getDueDate() != null ? wo.getDueDate().format(dateFmt) : "-";
+
+        this.createdAt = wo.getCreatedAt() != null ? wo.getCreatedAt().format(datetimeFmt) : "-";
 
         this.manager = (wo.getManager() != null) ? wo.getManager().getWorkerName() : "관리자";
     }
