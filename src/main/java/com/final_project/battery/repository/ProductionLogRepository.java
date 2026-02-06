@@ -19,6 +19,29 @@ public interface ProductionLogRepository extends JpaRepository<ProductionLog, Lo
 
     List<ProductionLog> findByLotAndProcessStep(Lot lot, ProcessStep processStep);
 
+    // [New] 일자별, 제품별 불량 수량 집계 (5공정 '검사' 단계만)
+    // endedAt 기준
+    @Query("SELECT function('date_format', p.endedAt, '%Y-%m-%d') as date, " +
+            "prod.productName as product, " +
+            "SUM(p.badQty) as ng " +
+            "FROM ProductionLog p " +
+            "JOIN p.lot l " +
+            "JOIN l.product prod " +
+            "JOIN p.processStep ps " +
+            "WHERE p.endedAt BETWEEN :start AND :end " +
+            "AND (ps.stepName LIKE '%검사%' OR ps.stepName LIKE '%Inspection%') " +
+            "GROUP BY function('date_format', p.endedAt, '%Y-%m-%d'), prod.productName")
+    List<Object[]> findDailyDefectStats(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    // [New] 오늘 공정별 생산/불량 집계 (차트용)
+    @Query("SELECT ps.stepName, SUM(p.goodQty), SUM(p.badQty) " +
+            "FROM ProductionLog p " +
+            "JOIN p.processStep ps " +
+            "WHERE p.endedAt BETWEEN :start AND :end " +
+            "GROUP BY ps.stepName, ps.seq " +
+            "ORDER BY ps.seq ASC")
+    List<Object[]> findTodayProcessStats(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
     // 검사이력 조회
     @Query(
             value = """
