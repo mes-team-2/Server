@@ -4,7 +4,6 @@ import com.final_project.battery.domain.common.DefectType;
 import com.final_project.battery.dto.request.ProductionLogRequestDto;
 import com.final_project.battery.dto.request.SensorLogRequestDto;
 import com.final_project.battery.dto.response.ProcessLogResponseDto;
-import com.final_project.battery.dto.response.ProductReportResponse;
 import com.final_project.battery.dto.response.TestLogDashboardResponseDto;
 import com.final_project.battery.dto.response.TestLogResponseDto;
 import com.final_project.battery.service.LogService;
@@ -115,29 +114,5 @@ public class LogController {
                 logService.getDashboard(isOk, keyword, defectType, startDate, endDate);
 
         return ResponseEntity.ok(result);
-    }
-
-    @GetMapping("/productionReport")
-    public Page<ProductReportResponse> getProductReport(
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime start,
-
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime end,
-
-            @RequestParam(required = false)
-            String productName,
-            @PageableDefault(size = 20, sort = "date", direction = Sort.Direction.DESC)
-            Pageable pageable
-    ) {
-        log.info("요청오냐 : {}", pageable);
-        return logService.getProductReport(
-                start,
-                end,
-                productName,
-                pageable
-        );
     }
 }
