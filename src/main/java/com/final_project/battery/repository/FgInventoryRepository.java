@@ -44,6 +44,8 @@ public interface FgInventoryRepository extends JpaRepository<FgInventory, Intege
             @Param("endDate") LocalDateTime endDate
     );
 
+    Optional<FgInventory> findByProduct_ProductCode(String productCode);
+
     @Query("SELECT function('date_format', f.createdAt, '%Y-%m-%d') as date, " +
             "p.productName as product, " +
             "SUM(f.stockQty) as ok " +
