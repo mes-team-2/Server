@@ -91,11 +91,11 @@ public class DataInitializer implements CommandLineRunner {
         Machine mB05 = createMachine("MAC-B-05", "Inspector #2", s5);
 
         // 설비 초기 상태 설정
-        setMachineStatus(mA01, "RUN", w2);
-        setMachineStatus(mA02, "RUN", w3);
-        setMachineStatus(mA03, "RUN", w2);
-        setMachineStatus(mA04, "RUN", w3);
-        setMachineStatus(mA05, "RUN", w4);
+        setMachineStatus(mA01, "WAIT", w2);
+        setMachineStatus(mA02, "WAIT", w3);
+        setMachineStatus(mA03, "WAIT", w2);
+        setMachineStatus(mA04, "WAIT", w3);
+        setMachineStatus(mA05, "WAIT", w4);
 
         setMachineStatus(mB01, "STOP", null);
         setMachineError(mB02, "ERROR", w2, "온도 센서 과열");
