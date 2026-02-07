@@ -4,10 +4,7 @@ import com.final_project.battery.domain.*;
 import com.final_project.battery.domain.common.*;
 import com.final_project.battery.dto.request.ProductionLogRequestDto;
 import com.final_project.battery.dto.request.SensorLogRequestDto;
-import com.final_project.battery.dto.response.ProcessLogResponseDto;
-import com.final_project.battery.dto.response.TestLogDashboardResponseDto;
-import com.final_project.battery.dto.response.TestLogResponseDto;
-import com.final_project.battery.dto.response.TraceabilityResponseDto;
+import com.final_project.battery.dto.response.*;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -445,6 +442,26 @@ public class LogService {
                 start,
                 end,
                 newPageable
+        );
+    }
+
+
+    // 추적성 집계
+    public TraceSummaryResponseDto getTraceSummary(
+            String keyword,
+            String machine,
+            String process,
+            String material,
+            LocalDateTime start,
+            LocalDateTime end
+    ) {
+        return qualityTestRepository.searchTraceSummary(
+                keyword,
+                machine,
+                process,
+                material,
+                start,
+                end
         );
     }
 }
