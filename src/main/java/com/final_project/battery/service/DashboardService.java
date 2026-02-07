@@ -51,11 +51,13 @@ public class DashboardService {
         int totalProduction = totalActual + totalDefect;
 
         // 계획 수량 (진행 중인 작업지시)
-        int totalPlanned = workOrderRepository.findAll().stream()
-                .filter(wo -> "IN_PROGRESS".equals(wo.getStatus().name()))
-                .mapToInt(WorkOrder::getPlannedQty)
-                .sum();
-        if (totalPlanned == 0) totalPlanned = 1000;
+//        int totalPlanned = workOrderRepository.findAll().stream()
+//                .filter(wo -> "IN_PROGRESS".equals(wo.getStatus().name()))
+//                .mapToInt(WorkOrder::getPlannedQty)
+//                .sum();
+//        if (totalPlanned == 0) totalPlanned = 1000;
+
+        int totalPlanned = 600;
 
         double achievementRate = (double) totalActual / totalPlanned * 100;
         // 양품률 = (최종양품 / (최종양품 + 전체불량)) - 엄격하게 계산
