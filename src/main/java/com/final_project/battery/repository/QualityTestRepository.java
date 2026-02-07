@@ -51,7 +51,22 @@ join ProductionLog plFinal
   on plFinal.lot = l
  and plFinal.processStep.id = 5
 
-where (:keyword is null or l.lotNo like %:keyword%)
+where (
+    :keyword is null
+    or l.lotNo like %:keyword%
+    or exists (
+        select 1
+        from MaterialLot ml
+        join ml.material mat2
+        where ml.materialLotNo like %:keyword%
+          and mat2 in (
+              select b3.material
+              from BOM b3
+              where b3.product = p
+          )
+    )
+)
+
   and (:start is null or plFinal.endedAt >= :start)
   and (:end is null or plFinal.endedAt <= :end)
 
@@ -96,7 +111,22 @@ join ProductionLog plFinal
   on plFinal.lot = l
  and plFinal.processStep.id = 5
 
-where (:keyword is null or l.lotNo like %:keyword%)
+where (
+    :keyword is null
+    or l.lotNo like %:keyword%
+    or exists (
+        select 1
+        from MaterialLot ml
+        join ml.material mat2
+        where ml.materialLotNo like %:keyword%
+          and mat2 in (
+              select b3.material
+              from BOM b3
+              where b3.product = p
+          )
+    )
+)
+
   and (:start is null or plFinal.endedAt >= :start)
   and (:end is null or plFinal.endedAt <= :end)
 
