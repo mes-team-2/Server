@@ -57,6 +57,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/defect-logs").permitAll()
                                 .requestMatchers("/api/product-lots").authenticated()
                                 .requestMatchers("/api/product-lots/**").authenticated()
+                                .requestMatchers("/api/shipments").authenticated()
+                                .requestMatchers("/api/shipments").permitAll()
 
 
 

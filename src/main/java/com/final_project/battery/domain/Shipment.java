@@ -1,8 +1,10 @@
 package com.final_project.battery.domain;
 
+import com.final_project.battery.domain.common.ShipmentType;
 import lombok.*;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -13,35 +15,28 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Table(name = "shipment")
 public class Shipment {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long shipmentId;
+    private Long id;
 
-    // 출하 번호
-    @Column(unique = true, nullable = false)
-    private String shipmentNo;
+    // 프론트 tx_type
+    @Enumerated(EnumType.STRING)
+    private ShipmentType txType;
 
-    // 출하 대상 완제품
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fg_inventory_id", nullable = false)
-    private FgInventory fgInventory;
+    // in / out (프론트 Status 컴포넌트용)
+    @Column(length = 10)
+    private String statusKey;
 
-    // 고객사
-    private String customerName;
+    // 제품 정보 (스냅샷)
+    private String productCode;
+    private String productName;
 
-    // 출하 수량
-    private int quantity;
+    // 수량 (+입고 / -출고)
+    private int qty;
 
-    @Column(nullable = false)
-    @Builder.Default
-    private String status = "SHIPPED";
+    private String unit;       // EA
+    private String location;   // 위치 or 출고처
+    private String note;       // WO-xxx, SH-xxx, 비고
 
-    // 출하 일자
-    private LocalDateTime shippedAt;
-
-    // 담당자
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "worker_id")
-    private Worker worker;
+    private LocalDateTime txTime;
 }
