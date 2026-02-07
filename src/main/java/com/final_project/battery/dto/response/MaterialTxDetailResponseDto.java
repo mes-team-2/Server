@@ -21,4 +21,5 @@ public class MaterialTxDetailResponseDto {
     private java.math.BigDecimal remainQty;
     private String materialCode;
     private String materialName;
+    private String productLotNo;
 }

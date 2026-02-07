@@ -330,6 +330,7 @@ public class InventoryService {
                 .qty(q.getQty())
                 .beforeQty(q.getBeforeQty())
                 .remainQty(afterQty)
+                .productLotNo(q.getProductLotNo())
                 .materialCode(q.getMaterialCode())
                 .materialName(q.getMaterialName())
                 .build();

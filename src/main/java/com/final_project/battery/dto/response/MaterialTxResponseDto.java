@@ -13,6 +13,7 @@ public class MaterialTxResponseDto {
     private TxType txType;
     private String materialName;
     private String materialNo;
+    private String productLotNo;
     private java.math.BigDecimal qty;
     private String unit;
 
@@ -23,6 +24,7 @@ public class MaterialTxResponseDto {
             TxType txType,
             String materialName,
             String materialNo,
+            String productLotNo,
             java.math.BigDecimal qty,
             String unit
     ) {
@@ -31,6 +33,7 @@ public class MaterialTxResponseDto {
         this.txType = txType;
         this.materialName = materialName;
         this.materialNo = materialNo;
+        this.productLotNo = productLotNo;
         this.qty = qty;
         this.unit = unit;
     }
