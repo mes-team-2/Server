@@ -7,11 +7,14 @@ import com.final_project.battery.dto.request.SensorLogRequestDto;
 import com.final_project.battery.dto.response.ProcessLogResponseDto;
 import com.final_project.battery.dto.response.TestLogDashboardResponseDto;
 import com.final_project.battery.dto.response.TestLogResponseDto;
+import com.final_project.battery.dto.response.TraceabilityResponseDto;
 import com.final_project.battery.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -391,6 +394,57 @@ public class LogService {
                 topDefectType,
                 daily,
                 defects
+        );
+    }
+
+    // 추적로그 조회
+    public Page<TraceabilityResponseDto> searchTrace(
+            String keyword,
+            String machine,
+            String process,
+            String material,
+            LocalDateTime start,
+            LocalDateTime end,
+            Pageable pageable
+    ) {
+
+        Sort newSort = Sort.unsorted();
+
+        if (pageable.getSort().isSorted()) {
+            List<Sort.Order> orders = new ArrayList<>();
+
+            for (Sort.Order order : pageable.getSort()) {
+                String prop = order.getProperty();
+
+                switch (prop) {
+                    case "lot":
+                        orders.add(new Sort.Order(order.getDirection(), "lotNo"));
+                        break;
+
+                    // testedAt 제거
+                    // yieldRate 제거
+                }
+            }
+
+            if (!orders.isEmpty()) {
+                newSort = Sort.by(orders);
+            }
+        }
+
+        Pageable newPageable = PageRequest.of(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                newSort
+        );
+
+        return qualityTestRepository.searchTrace(
+                keyword,
+                machine,
+                process,
+                material,
+                start,
+                end,
+                newPageable
         );
     }
 }

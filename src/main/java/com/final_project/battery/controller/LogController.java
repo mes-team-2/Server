@@ -6,6 +6,7 @@ import com.final_project.battery.dto.request.SensorLogRequestDto;
 import com.final_project.battery.dto.response.ProcessLogResponseDto;
 import com.final_project.battery.dto.response.TestLogDashboardResponseDto;
 import com.final_project.battery.dto.response.TestLogResponseDto;
+import com.final_project.battery.dto.response.TraceabilityResponseDto;
 import com.final_project.battery.service.LogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -114,5 +115,34 @@ public class LogController {
                 logService.getDashboard(isOk, keyword, defectType, startDate, endDate);
 
         return ResponseEntity.ok(result);
+    }
+
+    // 추적 정보 조회
+    @GetMapping("/trace")
+    public Page<TraceabilityResponseDto> getTraceList(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String machine,
+            @RequestParam(required = false) String process,
+            @RequestParam(required = false) String material,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime start,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime end,
+
+            Pageable pageable
+    ) {
+        return logService.searchTrace(
+                keyword,
+                machine,
+                process,
+                material,
+                start,
+                end,
+                pageable
+        );
     }
 }
