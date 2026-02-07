@@ -55,7 +55,6 @@ public class ShipmentService {
                 .qty(-Math.abs(req.getQty()))
                 .unit(req.getUnit())
                 .location(req.getLocation())
-                .note(req.getNote())
                 .build();
 
         shipmentRepository.save(shipment);
@@ -94,7 +93,6 @@ public class ShipmentService {
                 .qty(s.getQty())
                 .unit(s.getUnit())
                 .location(s.getLocation())
-                .note(s.getNote())
                 .build();
     }
 }
