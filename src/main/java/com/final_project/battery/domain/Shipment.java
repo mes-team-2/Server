@@ -36,7 +36,6 @@ public class Shipment {
 
     private String unit;       // EA
     private String location;   // 위치 or 출고처
-    private String note;       // WO-xxx, SH-xxx, 비고
 
     private LocalDateTime txTime;
 }
