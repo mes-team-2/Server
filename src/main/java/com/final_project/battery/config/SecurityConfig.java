@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/master/**").authenticated()
                                 .requestMatchers("/api/dashboard").authenticated()
                         .requestMatchers("/auth/logout").authenticated()
+                                .requestMatchers("/api/qr/**").permitAll()
                                 .requestMatchers("/api/log/**").permitAll()
                                 .requestMatchers("/api/defect-logs").authenticated()
                                 .requestMatchers("/api/product-lots").authenticated()
