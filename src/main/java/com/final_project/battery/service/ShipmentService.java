@@ -32,7 +32,7 @@ public class ShipmentService {
 
         // 1️⃣ 재고 조회
         FgInventory inventory = fgInventoryRepository
-                .findByProduct_ProductCode(req.getProductCode())
+                .findFirstByProduct_ProductCode(req.getProductCode())
                 .orElseThrow(() -> new IllegalArgumentException("재고 없음"));
 
         // 2️⃣ 재고 차감

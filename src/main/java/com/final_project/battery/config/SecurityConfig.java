@@ -47,18 +47,15 @@ public class SecurityConfig {
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/auth/login", "/auth/reissue").permitAll()
                                 .requestMatchers("/api/machines/**").permitAll()
-//                                .requestMatchers("/api/**").permitAll()
                                 .requestMatchers("/api/bom/**").authenticated()
                                 .requestMatchers("/api/master/**").authenticated()
                                 .requestMatchers("/api/dashboard").authenticated()
                         .requestMatchers("/auth/logout").authenticated()
                                 .requestMatchers("/api/log/**").permitAll()
                                 .requestMatchers("/api/defect-logs").authenticated()
-                                .requestMatchers("/api/defect-logs").permitAll()
                                 .requestMatchers("/api/product-lots").authenticated()
                                 .requestMatchers("/api/product-lots/**").authenticated()
                                 .requestMatchers("/api/shipments").authenticated()
-                                .requestMatchers("/api/shipments").permitAll()
 
 
 

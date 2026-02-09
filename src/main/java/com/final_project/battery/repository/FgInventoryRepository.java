@@ -17,6 +17,7 @@ import java.util.List;
 public interface FgInventoryRepository extends JpaRepository<FgInventory, Integer> {
     Optional<FgInventory> findByLot(Lot lot);
     List<FgInventory> findByLocationCode(String locationCode);
+    Optional<FgInventory> findFirstByProduct_ProductCode(String productCode);
 
     // 제품 재고 관리 데이터
     @Query("""
