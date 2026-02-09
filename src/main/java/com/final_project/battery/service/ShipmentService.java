@@ -11,11 +11,13 @@ import com.final_project.battery.repository.LotRepository;
 import com.final_project.battery.repository.ShipmentRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 
@@ -23,36 +25,56 @@ public class ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
     private final FgInventoryRepository fgInventoryRepository;
+    private final LotRepository lotRepository;
 
     // ======================
     // 출하 등록
     // ======================
     @Transactional
     public void createShipment(ShipmentCreateRequestDto req) {
+        System.out.println(">>> req = " + req.getQty());
+        System.out.println(">>> req = " + req.getTxType());
+        System.out.println(">>> req = " + req.getUnit());
+        System.out.println(">>> req = " + req.getProductName());
+        System.out.println(">>> req = " + req.getProductCode());
+        System.out.println(">>> req = " + req.getQty());
+        System.out.println(">>> req.lotNo = [" + req.getLotNo() + "]");
+//        req.setUnit("EA");
+//        req.setStatusKey("out");
+//        req.setTxTime(LocalDateTime.now());
+//        req.setTxType(ShipmentType.SHIPMENT_OUT);
 
-        // 1️⃣ 재고 조회
-        FgInventory inventory = fgInventoryRepository
-                .findFirstByProduct_ProductCode(req.getProductCode())
-                .orElseThrow(() -> new IllegalArgumentException("재고 없음"));
 
-        // 2️⃣ 재고 차감
+        String lotNo = req.getLotNo();
+        System.out.println(">>> searching lotNo = [" + lotNo + "]");
+
+        // 1️⃣ LOT 조회
+        Lot lot = lotRepository.findByLotNo(req.getLotNo())
+                .orElseThrow(() -> new IllegalArgumentException("해당 LOT 없음"));
+
+
+        log.info(">>> ShipmentCreateRequestDto = {}", req);
+        log.info(">>> lotNo from request = [{}]", req.getLotNo());
+
+        // 2️⃣ LOT 기준 재고 조회
+        FgInventory inventory = fgInventoryRepository.findByLot(lot)
+                .orElseThrow(() -> new IllegalArgumentException("LOT 재고 없음"));
+
+        // 3️⃣ 재고 차감
         if (inventory.getStockQty() < req.getQty()) {
             throw new IllegalArgumentException("출하 수량이 재고보다 많습니다.");
         }
+        inventory.setStockQty(inventory.getStockQty() - req.getQty());
 
-        inventory.setStockQty(
-                inventory.getStockQty() - req.getQty()
-        );
-
-
-        // 3️⃣ 출하 이력 생성
+        // 4️⃣ Shipment 저장
         Shipment shipment = Shipment.builder()
-                .txTime(LocalDateTime.now())
-                .txType(ShipmentType.SHIPMENT_OUT)
-                .statusKey("out")
-                .productCode(req.getProductCode())
-                .productName(req.getProductName())
-                .qty(-Math.abs(req.getQty()))
+                .productCode(lot.getProduct().getProductCode())
+                .productName(lot.getProduct().getProductName())
+                .productLotNo(lot.getLotNo())
+                .txType(req.getTxType())
+                .txTime(req.getTxTime())
+                .statusKey(req.getStatusKey())
+                .qty(req.getQty())
                 .unit(req.getUnit())
                 .location(req.getLocation())
                 .build();
@@ -85,10 +107,11 @@ public class ShipmentService {
     private ShipmentResponseDto toDto(Shipment s) {
         return ShipmentResponseDto.builder()
                 .id(s.getId())
-                .tx_time(s.getTxTime())
-                .tx_type(s.getTxType().name())
+                .txTime(s.getTxTime())
+                .txType(s.getTxType().name())
                 .status_key(s.getStatusKey())
                 .productCode(s.getProductCode())
+                .productLotNo(s.getProductLotNo())
                 .productName(s.getProductName())
                 .qty(s.getQty())
                 .unit(s.getUnit())

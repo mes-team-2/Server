@@ -4,6 +4,7 @@ import com.final_project.battery.dto.request.ShipmentCreateRequestDto;
 import com.final_project.battery.dto.response.ShipmentResponseDto;
 import com.final_project.battery.service.ShipmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -18,6 +19,7 @@ public class ShipmentController {
 
     @PostMapping
     public void create(@RequestBody ShipmentCreateRequestDto req) {
+
         shipmentService.createShipment(req);
     }
 
@@ -28,4 +30,7 @@ public class ShipmentController {
     ) {
         return shipmentService.getShipmentHistory(start, end);
     }
+
+
+
 }

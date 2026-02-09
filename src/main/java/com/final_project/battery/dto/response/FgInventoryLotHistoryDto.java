@@ -13,4 +13,5 @@ public class FgInventoryLotHistoryDto {
     private LocalDateTime time; // 생산일
     private String order; // 작업지시
     private String workerName; // 담당자
+
 }

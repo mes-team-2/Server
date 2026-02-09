@@ -499,5 +499,25 @@ public class InventoryService {
                 histories
         );
     }
+    // ⭐ LOT 기준 완제품 재고 조회 (Shipment용)
+    @Transactional(readOnly = true)
+    public List<FgInventoryResponseDto> getFgLotInventory() {
+
+        List<FgInventory> list = fgInventoryRepository.findAllLotInventory();
+
+        System.out.println(">>> FgInventory count = " + list.size());
+        list.forEach(f ->
+                System.out.println(
+                        ">>> fgId=" + f.getFgInventoryId()
+                                + ", lotId=" + f.getLot().getLotId()
+                                + ", lotNo=" + f.getLot().getLotNo()
+                )
+        );
+
+        return list.stream()
+                .map(FgInventoryResponseDto::from)
+                .toList();
+    }
+
 
 }

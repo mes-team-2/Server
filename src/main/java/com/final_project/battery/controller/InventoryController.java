@@ -137,4 +137,10 @@ public class InventoryController {
                 inventoryService.getFgDetail(productCode)
         );
     }
+    // ⭐ LOT 기준 완제품 재고 조회 (Shipment용)
+    @GetMapping("/fginventory/lot")
+    public List<FgInventoryResponseDto> getFgLotInventory() {
+        return inventoryService.getFgLotInventory();
+    }
+
 }

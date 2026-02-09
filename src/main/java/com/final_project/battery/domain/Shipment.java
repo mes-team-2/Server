@@ -30,6 +30,7 @@ public class Shipment {
     // 제품 정보 (스냅샷)
     private String productCode;
     private String productName;
+    private String productLotNo;
 
     // 수량 (+입고 / -출고)
     private int qty;

@@ -10,12 +10,13 @@ import java.time.LocalDateTime;
 
 public class ShipmentResponseDto {
     private Long id;
-    private LocalDateTime tx_time;
-    private String tx_type;
+    private LocalDateTime txTime;
+    private String txType;
     private String status_key;
 
     private String productCode;
     private String productName;
+    private String productLotNo;
 
     private int qty;
     private String unit;

@@ -55,4 +55,14 @@ public interface FgInventoryRepository extends JpaRepository<FgInventory, Intege
             "WHERE f.createdAt BETWEEN :start AND :end " +
             "GROUP BY function('date_format', f.createdAt, '%Y-%m-%d'), p.productName")
     List<Object[]> findDailyProductionStats(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
+
+    @Query("""
+select distinct f
+from FgInventory f
+join fetch f.lot l
+join fetch l.product p
+where f.stockQty > 0
+""")
+    List<FgInventory> findAllLotInventory();
+
 }
