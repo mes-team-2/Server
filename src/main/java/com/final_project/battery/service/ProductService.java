@@ -59,7 +59,7 @@ public class ProductService {
                         .material(material)
                         .requiredQty(BigDecimal.valueOf(item.getQty()))
                         .scrapRate(BigDecimal.ZERO)
-                        .note("조립공정") // 기본값
+                        .note(item.getProcess() != null ? item.getProcess() : "조립공정")
                         .build();
                 bomRepository.save(bom);
             }

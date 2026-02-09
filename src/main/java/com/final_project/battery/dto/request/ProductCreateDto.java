@@ -24,5 +24,6 @@ public class ProductCreateDto {
     public static class BomItem {
         private String materialCode;
         private Double qty;
+        private String process;
     }
 }
