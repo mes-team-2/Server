@@ -39,10 +39,10 @@ public class ShipmentService {
         System.out.println(">>> req = " + req.getProductCode());
         System.out.println(">>> req = " + req.getQty());
         System.out.println(">>> req.lotNo = [" + req.getLotNo() + "]");
-//        req.setUnit("EA");
-//        req.setStatusKey("out");
-//        req.setTxTime(LocalDateTime.now());
-//        req.setTxType(ShipmentType.SHIPMENT_OUT);
+        req.setUnit("EA");
+        req.setStatusKey("out");
+        req.setTxTime(LocalDateTime.now());
+        req.setTxType(ShipmentType.SHIPMENT_OUT);
 
 
         String lotNo = req.getLotNo();
