@@ -3,6 +3,7 @@ package com.final_project.battery.service;
 import com.final_project.battery.domain.RefreshToken;
 import com.final_project.battery.domain.Worker;
 import com.final_project.battery.dto.request.LoginRequestDto;
+import com.final_project.battery.dto.request.PasswordChangeRequestDto;
 import com.final_project.battery.dto.request.TokenRequestDto;
 import com.final_project.battery.dto.response.TokenDto;
 import com.final_project.battery.exception.CustomException;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final WorkerRepository workerRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     public TokenDto login(LoginRequestDto loginRequestDto) {
@@ -83,6 +86,22 @@ public class AuthService {
         setWorkerName(tokenDto, authentication.getName());
 
         return tokenDto;
+    }
+
+    @Transactional
+    public void changePassword(PasswordChangeRequestDto dto) {
+        // 1. 사용자 조회
+        Worker worker = workerRepository.findByWorkerCode(dto.getWorkerCode())
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다."));
+
+        // 2. 현재 비밀번호 검증
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), worker.getPassword())) {
+            // 프론트엔드 catch 블록에서 alert 또는 인라인 메시지로 보여줄 텍스트
+            throw new RuntimeException("현재 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 3. 새 비밀번호 암호화 및 업데이트
+        worker.setPassword(passwordEncoder.encode(dto.getNewPassword()));
     }
 
     @Transactional

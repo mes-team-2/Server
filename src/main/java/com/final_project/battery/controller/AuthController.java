@@ -1,6 +1,7 @@
 package com.final_project.battery.controller;
 
 import com.final_project.battery.dto.request.LoginRequestDto;
+import com.final_project.battery.dto.request.PasswordChangeRequestDto;
 import com.final_project.battery.dto.request.TokenRequestDto;
 import com.final_project.battery.dto.response.TokenDto;
 import com.final_project.battery.service.AuthService;
@@ -30,5 +31,11 @@ public class AuthController {
     public ResponseEntity<String> logout() {
         authService.logout(SecurityUtil.getCurrentWorkerCode());
         return ResponseEntity.ok("로그아웃 되었습니다.");
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<String> changePassword(@RequestBody PasswordChangeRequestDto dto) {
+        authService.changePassword(dto);
+        return ResponseEntity.ok("비밀번호가 변경되었습니다.");
     }
 }
