@@ -56,16 +56,14 @@ where (
     :keyword is null
     or l.lotNo like %:keyword%
     or exists (
-        select 1
-        from MaterialLot ml
-        join ml.material mat2
-        where ml.materialLotNo like %:keyword%
-          and mat2 in (
-              select b3.material
-              from BOM b3
-              where b3.product = p
-          )
-    )
+                             select 1
+                             from MaterialTx mt
+                             join mt.materialLot ml
+                             where mt.lot = l
+                               and mt.txType = com.final_project.battery.domain.common.TxType.CONSUME
+                               and ml.materialLotNo like %:keyword%
+                         )
+                    
 )
 
   and (:start is null or plFinal.endedAt >= :start)
@@ -92,14 +90,16 @@ where (
   )
 
   and (
-    :material is null or exists (
-        select 1
-        from BOM b2
-        join b2.material m2
-        where b2.product = p
-          and m2.materialName = :material
-    )
-  )
+                         :material is null or exists (
+                             select 1
+                             from MaterialTx mt2
+                             join mt2.material m2
+                             where mt2.lot = l
+                               and mt2.txType = com.final_project.battery.domain.common.TxType.CONSUME
+                               and m2.materialName = :material
+                         )
+                       )
+                    
 
 group by l.lotNo, p.productName
 order by max(plFinal.endedAt) desc
@@ -116,16 +116,14 @@ where (
     :keyword is null
     or l.lotNo like %:keyword%
     or exists (
-        select 1
-        from MaterialLot ml
-        join ml.material mat2
-        where ml.materialLotNo like %:keyword%
-          and mat2 in (
-              select b3.material
-              from BOM b3
-              where b3.product = p
-          )
-    )
+                             select 1
+                             from MaterialTx mt
+                             join mt.materialLot ml
+                             where mt.lot = l
+                               and mt.txType = com.final_project.battery.domain.common.TxType.CONSUME
+                               and ml.materialLotNo like %:keyword%
+                         )
+                    
 )
 
   and (:start is null or plFinal.endedAt >= :start)
@@ -152,14 +150,16 @@ where (
   )
 
   and (
-    :material is null or exists (
-        select 1
-        from BOM b2
-        join b2.material m2
-        where b2.product = p
-          and m2.materialName = :material
-    )
-  )
+                         :material is null or exists (
+                             select 1
+                             from MaterialTx mt2
+                             join mt2.material m2
+                             where mt2.lot = l
+                               and mt2.txType = com.final_project.battery.domain.common.TxType.CONSUME
+                               and m2.materialName = :material
+                         )
+                       )
+                    
 """
     )
     Page<TraceabilityResponseDto> searchTrace(
@@ -196,16 +196,14 @@ where (
     :keyword is null
     or l.lotNo like %:keyword%
     or exists (
-        select 1
-        from MaterialLot ml
-        join ml.material mat2
-        where ml.materialLotNo like %:keyword%
-          and mat2 in (
-              select b3.material
-              from BOM b3
-              where b3.product = p
-          )
-    )
+                     select 1
+                     from MaterialTx mt
+                     join mt.materialLot ml
+                     where mt.lot = l
+                       and mt.txType = com.final_project.battery.domain.common.TxType.CONSUME
+                       and ml.materialLotNo like %:keyword%
+                 )
+            
 )
 
 and (:start is null or plFinal.endedAt >= :start)
@@ -231,15 +229,17 @@ and (
   )
 )
 
-and (
-  :material is null or exists (
-      select 1
-      from BOM b2
-      join b2.material m2
-      where b2.product = p
-        and m2.materialName = :material
-  )
-)
+            and (
+               :material is null or exists (
+                   select 1
+                   from MaterialTx mt2
+                   join mt2.material m2
+                   where mt2.lot = l
+                     and mt2.txType = com.final_project.battery.domain.common.TxType.CONSUME
+                     and m2.materialName = :material
+               )
+             )
+            
 """)
     TraceSummaryResponseDto searchTraceSummary(
             @Param("keyword") String keyword,
